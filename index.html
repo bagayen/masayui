@@ -24,23 +24,32 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body class="h-full text-slate-100 flex flex-col md:flex-row overflow-hidden bg-slate-950">
+<body class="h-full text-slate-100 flex flex-col lg:flex-row overflow-hidden bg-slate-950">
 
-    <aside class="w-full md:w-64 bg-slate-900/95 backdrop-blur-md border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between shrink-0 z-20">
-        <div>
-            <div class="px-3.5 py-2.5 md:p-5 flex items-center justify-between border-b border-slate-800/80">
-                <div class="flex items-center gap-2.5 md:gap-3">
-                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl shopee-gradient flex items-center justify-center text-white font-black text-base md:text-xl shadow-lg shadow-purple-900/40 shrink-0">
+    <!-- 側邊欄 / 響應式頂部導覽列 -->
+    <aside id="mainSidebar" class="w-full lg:w-56 xl:w-60 bg-slate-900/95 backdrop-blur-md border-b lg:border-b-0 lg:border-r border-slate-800 flex flex-col justify-between shrink-0 z-20 transition-all duration-300">
+        <div class="flex flex-col md:flex-row lg:flex-col md:items-center lg:items-stretch md:justify-between lg:justify-start">
+            <div id="sidebarHeader" class="px-3.5 py-2.5 lg:p-5 flex items-center justify-between border-b md:border-b-0 lg:border-b border-slate-800/80 shrink-0 transition-all">
+                <div class="flex items-center gap-2.5 lg:gap-3 min-w-0">
+                    <div class="w-8 h-8 lg:w-10 lg:h-10 rounded-xl shopee-gradient flex items-center justify-center text-white font-black text-base lg:text-xl shadow-lg shadow-purple-900/40 shrink-0">
                         <i class="fa-solid fa-chart-line"></i>
                     </div>
-                    <div>
-                        <h1 class="font-bold text-sm md:text-base leading-tight tracking-wide text-white">Shopee Power</h1>
-                        <p class="text-[10px] md:text-[11px] text-purple-400 font-medium">Affiliate Center v2.2</p>
+                    <div class="sidebar-text truncate">
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="font-bold text-sm lg:text-base leading-tight tracking-wide text-white">Shopee Power</h1>
+                            <span id="collapsedTabBadge" class="hidden lg:hidden px-1.5 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded text-[10px] font-bold">業績訂單</span>
+                        </div>
+                        <p class="text-[10px] lg:text-[11px] text-purple-400 font-medium">Affiliate Center v2.2</p>
                     </div>
                 </div>
 
-                <!-- 手機版精簡工具列 (測試模式開關 + 設定齒輪) -->
-                <div class="flex items-center gap-2 md:hidden">
+                <!-- 電腦版收合按鈕 (>= lg) -->
+                <button onclick="toggleSidebar()" id="desktopCollapseBtn" title="收合 / 展開側邊欄" aria-label="收合或展開側邊欄" class="hidden lg:flex w-7 h-7 items-center justify-center bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 rounded-lg text-slate-400 hover:text-white text-xs transition-colors shrink-0">
+                    <i id="desktopCollapseIcon" class="fa-solid fa-angles-left"></i>
+                </button>
+
+                <!-- 手機版精簡工具列 (< md) -->
+                <div class="flex items-center gap-1.5 md:hidden">
                     <label class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] text-slate-300 select-none">
                         <span>測試</span>
                         <input type="checkbox" id="demoModeToggleMobile" class="sr-only peer" checked onchange="toggleDemoMode(this)">
@@ -49,67 +58,80 @@
                     <button onclick="openSettingsModal()" aria-label="設定 GAS API 網址" class="w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 text-xs transition-colors">
                         <i class="fa-solid fa-gear"></i>
                     </button>
+                    <button onclick="toggleSidebar()" aria-label="收合或展開導覽選單" class="w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-purple-300 text-xs transition-colors">
+                        <i id="mobileCollapseIcon" class="fa-solid fa-chevron-up"></i>
+                    </button>
                 </div>
             </div>
 
-            <nav class="px-2.5 py-2 md:p-3 flex md:flex-col gap-1.5 md:gap-1 overflow-x-auto md:overflow-visible no-scrollbar">
-                <button onclick="switchTab('analytics')" id="nav-analytics" class="tab-btn active flex-1 md:flex-none md:w-full flex items-center justify-center md:justify-start gap-1.5 md:gap-3 px-2.5 py-2 md:px-4 md:py-3 rounded-xl text-xs font-bold transition-all text-purple-400 bg-purple-500/10 border border-purple-500/20 whitespace-nowrap">
-                    <i class="fa-solid fa-chart-pie text-sm md:text-base"></i>
-                    <span class="md:hidden">業績訂單</span>
-                    <span class="hidden md:inline">業績與訂單回報</span>
+            <!-- 分頁導覽按鈕 -->
+            <nav id="mainNav" class="px-2.5 py-2 md:py-0 lg:p-3 flex lg:flex-col gap-1.5 lg:gap-1 overflow-x-auto lg:overflow-visible no-scrollbar">
+                <button onclick="switchTab('analytics')" id="nav-analytics" title="業績與訂單回報" class="tab-btn active flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-bold transition-all text-purple-400 bg-purple-500/10 border border-purple-500/20 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie text-sm lg:text-base shrink-0"></i>
+                    <span class="lg:hidden">業績訂單</span>
+                    <span class="sidebar-text hidden lg:inline">業績與訂單回報</span>
                 </button>
-                <button onclick="switchTab('highCommission')" id="nav-highCommission" class="tab-btn flex-1 md:flex-none md:w-full flex items-center justify-center md:justify-start gap-1.5 md:gap-3 px-2.5 py-2 md:px-4 md:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-fire text-sm md:text-base text-amber-500"></i>
-                    <span class="md:hidden">高佣選品</span>
-                    <span class="hidden md:inline">高佣金爆款選品</span>
+                <button onclick="switchTab('highCommission')" id="nav-highCommission" title="高佣金爆款選品" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
+                    <i class="fa-solid fa-fire text-sm lg:text-base text-amber-500 shrink-0"></i>
+                    <span class="lg:hidden">高佣選品</span>
+                    <span class="sidebar-text hidden lg:inline">高佣金爆款選品</span>
                 </button>
-                <button onclick="switchTab('converter')" id="nav-converter" class="tab-btn flex-1 md:flex-none md:w-full flex items-center justify-center md:justify-start gap-1.5 md:gap-3 px-2.5 py-2 md:px-4 md:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-link text-sm md:text-base text-cyan-400"></i>
-                    <span class="md:hidden">渠道轉換</span>
-                    <span class="hidden md:inline">SubID 渠道轉換器</span>
+                <button onclick="switchTab('converter')" id="nav-converter" title="SubID 渠道轉換器" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
+                    <i class="fa-solid fa-link text-sm lg:text-base text-cyan-400 shrink-0"></i>
+                    <span class="lg:hidden">渠道轉換</span>
+                    <span class="sidebar-text hidden lg:inline">SubID 渠道轉換器</span>
                 </button>
             </nav>
+
+            <!-- 平板版精簡工具列 (md ~ lg) -->
+            <div class="hidden md:flex lg:hidden items-center gap-2 pr-3.5 shrink-0">
+                <label class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] text-slate-300 select-none">
+                    <span>測試模式</span>
+                    <input type="checkbox" id="demoModeToggleTablet" class="sr-only peer" checked onchange="toggleDemoMode(this)">
+                    <div class="relative w-7 h-4 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+                <button onclick="openSettingsModal()" aria-label="設定 GAS API 網址" class="w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 text-xs transition-colors">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+                <button onclick="toggleSidebar()" aria-label="收合或展開導覽選單" class="w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-purple-300 text-xs transition-colors">
+                    <i id="tabletCollapseIcon" class="fa-solid fa-chevron-up"></i>
+                </button>
+            </div>
         </div>
 
-        <div class="hidden md:block p-4 border-t border-slate-800 bg-slate-900/50 space-y-3">
-            <div class="flex items-center justify-between text-xs text-slate-400">
-                <span class="flex items-center gap-1.5"><i class="fa-solid fa-vial"></i> 模擬測試模式</span>
-                <label class="relative inline-flex items-center cursor-pointer">
+        <!-- 電腦版側邊欄底部工具區 (>= lg) -->
+        <div id="sidebarFooter" class="hidden lg:block p-4 border-t border-slate-800 bg-slate-900/50 space-y-3 transition-all">
+            <div id="sidebarDemoRow" class="flex items-center justify-between text-xs text-slate-400">
+                <span class="sidebar-text flex items-center gap-1.5"><i class="fa-solid fa-vial"></i> 模擬測試模式</span>
+                <label title="切換模擬測試模式" class="relative inline-flex items-center cursor-pointer shrink-0">
                     <input type="checkbox" id="demoModeToggle" class="sr-only peer" checked onchange="toggleDemoMode(this)">
                     <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                 </label>
             </div>
-            <button onclick="openSettingsModal()" class="w-full text-center py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 font-medium transition-colors">
-                <i class="fa-solid fa-gear text-slate-400 mr-1"></i> 設定 GAS API 網址
+            <button onclick="openSettingsModal()" id="sidebarSettingsBtn" title="設定 GAS API 網址" class="w-full flex items-center justify-center py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 font-medium transition-colors">
+                <i class="fa-solid fa-gear text-slate-400"></i>
+                <span class="sidebar-text ml-1.5">設定 GAS API 網址</span>
             </button>
         </div>
     </aside>
 
-    <main class="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 md:p-8 space-y-5 md:space-y-6">
+    <!-- 主內容區 -->
+    <main class="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 md:p-6 lg:p-8 space-y-5 md:space-y-6">
+        <!-- 未設定 GAS 提示條 -->
+        <div id="gasWarning" class="hidden p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-200">
+            <div class="flex items-center gap-2.5">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base shrink-0"></i>
+                <span>目前尚未設定真實的 <strong>GAS API 網址</strong>，關閉測試模式後將無法連線抓取資料。</span>
+            </div>
+            <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shrink-0 transition-colors">
+                立即設定
+            </button>
+        </div>
+
         <!-- ================= TAB 1: 業績與訂單回報 ================= -->
         <section id="tab-analytics" class="tab-content space-y-5 md:space-y-6">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div>
-                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                        <i class="fa-solid fa-chart-pie text-purple-400"></i> 業績與訂單轉換總覽
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">即時追蹤分潤訂單狀態、預估佣金與各渠道推廣成效</p>
-                </div>
-            </div>
-
-            <!-- 未設定 GAS API 警告提示橫幅 -->
-            <div id="gasWarning" class="hidden p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-200">
-                <div class="flex items-center gap-2.5">
-                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base shrink-0"></i>
-                    <span>目前尚未設定真實的 <strong>GAS API 網址</strong>，關閉測試模式後將無法連線抓取資料。</span>
-                </div>
-                <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shrink-0 transition-colors">
-                    立即設定
-                </button>
-            </div>
-
             <!-- KPI Metric Cards -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 <div class="glass-card p-3.5 md:p-5 rounded-2xl space-y-1.5 md:space-y-2">
                     <div class="flex justify-between text-slate-400 text-[11px] md:text-xs font-semibold"><span>預估總收益</span><i class="fa-solid fa-dollar-sign text-emerald-400"></i></div>
                     <div class="text-xl sm:text-2xl md:text-3xl font-extrabold text-emerald-400 truncate" id="kpiEstCommission">$0</div>
@@ -129,15 +151,15 @@
             </div>
 
             <!-- Order Table Card -->
-            <div class="glass-card rounded-2xl p-5 space-y-4">
-                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 pb-2 border-b border-slate-800">
+            <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-4">
+                <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-3 pb-3 border-b border-slate-800">
                     <h3 class="text-sm font-bold text-white flex items-center shrink-0">
-                        <i class="fa-solid fa-list-check text-slate-400 mr-2"></i>訂單詳細清單
+                        <i class="fa-solid fa-list-check text-purple-400 mr-2"></i>訂單詳細清單
                     </h3>
                     
                     <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-                        <!-- 時間區間選擇器 (注意 onchange 調用的是切換日曆顯示的方法) -->
-                        <select id="reportDaysSelect" onchange="handleDateSelectChange()" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500">
+                        <!-- 時間區間選擇器 -->
+                        <select id="reportDaysSelect" onchange="handleDateSelectChange()" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500">
                             <option value="yesterday"selected>昨日</option>
                             <option value="lastWeek">上一週</option>
                             <option value="lastMonth">上個月</option>
@@ -154,25 +176,25 @@
                             <input type="date" id="customEndDate" class="bg-slate-900 border border-slate-700/80 rounded-xl px-2 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500">
                         </div>
 
-                        <div class="relative flex-1 md:w-64">
+                        <div class="relative flex-1 sm:w-56 md:w-64 min-w-[160px]">
                             <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-500 text-xs"></i>
-                            <input type="text" id="orderSearchInput" onkeyup="if(event.key==='Enter') fetchConversionReport()" placeholder="搜尋訂單 / 商品 / SubID" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                            <input type="text" id="orderSearchInput" onkeyup="if(event.key==='Enter') fetchConversionReport()" placeholder="搜尋訂單 / 商品 / SubID" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-8 pr-3 py-2 text-xs text-white focus:outline-none focus:border-purple-500">
                         </div>
-                        <button onclick="fetchConversionReport()" class="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center gap-1.5">
+                        <button onclick="fetchConversionReport()" class="px-3.5 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-purple-900/40 flex items-center gap-1.5">
                             <i class="fa-solid fa-search"></i> 搜尋
                         </button>
                         <div class="h-6 w-px bg-slate-700 hidden xl:block mx-1"></div>
-                        <button onclick="exportToCSV()" class="px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/50 text-emerald-400 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+                        <button onclick="exportToCSV()" class="px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/40 border border-emerald-500/50 text-emerald-400 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
                             <i class="fa-solid fa-file-csv"></i> 匯出CSV
                         </button>
-                        <button onclick="syncToCloud()" id="btnSyncCloud" class="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-400 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
+                        <button onclick="syncToCloud()" id="btnSyncCloud" class="px-3 py-2 bg-blue-600/20 hover:bg-blue-600/40 border border-blue-500/50 text-blue-400 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5">
                             <i class="fa-solid fa-cloud-arrow-up"></i> 補齊至雲端
                         </button>
                     </div>
                 </div>
                 
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
+                    <table class="w-full text-left border-collapse text-xs min-w-[760px]">
                         <thead>
                             <tr class="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider select-none">
                                 <th class="p-3 w-10 text-center">#</th>
@@ -195,7 +217,7 @@
         <!-- ================= TAB 2: 高佣金爆款選品 ================= -->
         <section id="tab-highCommission" class="tab-content space-y-6 hidden">
             <div>
-                <h2 class="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+                <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
                     <i class="fa-solid fa-fire text-amber-500"></i> 高佣金爆款推薦
                 </h2>
                 <p class="text-xs text-slate-400 mt-1">搜尋蝦皮官方加碼高分潤商品 (每次載入 50 筆)</p>
@@ -203,11 +225,11 @@
 
             <div class="glass-card p-4 rounded-2xl flex flex-col sm:flex-row gap-3">
                 <div class="relative flex-1">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-sm"></i>
-                    <input type="text" id="productSearchKey" placeholder="搜尋高佣金商品（如：保濕精華）" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-sm"></i>
+                    <input type="text" id="productSearchKey" onkeyup="if(event.key==='Enter') fetchHighCommissionProducts()" placeholder="搜尋高佣金商品（如：保濕精華）" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
                 </div>
                 <select id="sortCommissionSelect" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500">
-                    <option value="1">佣金比例高至低</option>
+                    <option value="5">佣金比例高至低</option>
                     <option value="2">銷量熱門優先</option>
                     <option value="3">價格由低至高</option>
                 </select>
@@ -217,14 +239,14 @@
             </div>
 
             <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <div class="col-span-full p-12 text-center text-slate-500">請輸入關鍵字，並點擊「搜尋高佣商品」</div>
+                <div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">請輸入關鍵字，並點擊「搜尋高佣商品」</div>
             </div>
         </section>
 
         <!-- ================= TAB 3: SubID 渠道轉換器 ================= -->
         <section id="tab-converter" class="tab-content space-y-6 hidden">
             <div>
-                <h2 class="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+                <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
                     <i class="fa-solid fa-tags text-cyan-400"></i> 進階渠道轉碼器 (最高 5 組)
                 </h2>
                 <p class="text-xs text-slate-400 mt-1">自訂深達 5 層的渠道追蹤碼，精準分析推廣來源轉換率</p>
@@ -241,15 +263,15 @@
                     <div class="space-y-3 pt-2">
                         <label class="text-xs text-slate-300 font-semibold block border-b border-slate-800 pb-2">SubID 追蹤標籤 (可選填 1~5 組)</label>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div><input type="text" id="subId1Input" placeholder="SubID 1 (如: instagram)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300"></div>
-                            <div><input type="text" id="subId2Input" placeholder="SubID 2 (如: 雙11檔期)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300"></div>
-                            <div><input type="text" id="subId3Input" placeholder="SubID 3 (如: 版面頂部)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300"></div>
-                            <div><input type="text" id="subId4Input" placeholder="SubID 4 (自訂標籤)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300"></div>
-                            <div class="md:col-span-2"><input type="text" id="subId5Input" placeholder="SubID 5 (自訂標籤)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300"></div>
+                            <div><input type="text" id="subId1Input" placeholder="SubID 1 (如: instagram)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300 focus:outline-none focus:border-cyan-500"></div>
+                            <div><input type="text" id="subId2Input" placeholder="SubID 2 (如: 雙11檔期)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300 focus:outline-none focus:border-cyan-500"></div>
+                            <div><input type="text" id="subId3Input" placeholder="SubID 3 (如: 版面頂部)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300 focus:outline-none focus:border-cyan-500"></div>
+                            <div><input type="text" id="subId4Input" placeholder="SubID 4 (自訂標籤)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300 focus:outline-none focus:border-cyan-500"></div>
+                            <div class="md:col-span-2"><input type="text" id="subId5Input" placeholder="SubID 5 (自訂標籤)" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg p-2.5 text-xs text-cyan-300 focus:outline-none focus:border-cyan-500"></div>
                         </div>
                     </div>
 
-                    <button onclick="generateSubIdLink()" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-cyan-500/20">
+                    <button onclick="generateSubIdLink()" id="btnGenerateSubId" class="w-full py-3 bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-cyan-500/20">
                         生成帶標籤短網址
                     </button>
                 </div>
@@ -283,6 +305,9 @@
         </div>
     </div>
 
+    <!-- Custom Toast Notification (取代 alert) -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
     <script>
         const DEFAULT_GAS_URL = "請在此填寫你的_GAS_網址"; 
         let gasApiUrl = localStorage.getItem('SHOPEE_GAS_URL') || (DEFAULT_GAS_URL !== "請在此填寫你的_GAS_網址" ? DEFAULT_GAS_URL : '');
@@ -290,33 +315,183 @@
 
         let currentOrdersData = [];
         let sortState = { column: 'time', asc: false };
+        let isSidebarCollapsed = localStorage.getItem('SHOPEE_NAV_COLLAPSED') === 'true';
 
+        // ==========================================
+        // 初始化設定
+        // ==========================================
         window.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('gasUrlInput')) document.getElementById('gasUrlInput').value = gasApiUrl;
             if (document.getElementById('demoModeToggle')) document.getElementById('demoModeToggle').checked = isDemoMode;
             if (document.getElementById('demoModeToggleMobile')) document.getElementById('demoModeToggleMobile').checked = isDemoMode;
+            if (document.getElementById('demoModeToggleTablet')) document.getElementById('demoModeToggleTablet').checked = isDemoMode;
             
+            applySidebarState();
+
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('customStartDate').value = todayStr;
             document.getElementById('customEndDate').value = todayStr;
             toggleDemoMode();
+
+            // 若預設為測試模式，自動載入模擬數據讓畫面有資料可看
+            if (isDemoMode) {
+                fetchConversionReport();
+            }
         });
-// ... existing code ... -->
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20');
-                el.classList.add('text-slate-400', 'border-transparent');
-            });
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            const activeBtn = document.getElementById(`nav-${tabId}`);
-            activeBtn.classList.remove('text-slate-400', 'border-transparent');
-            activeBtn.classList.add('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20');
+
+        // ==========================================
+        // 導覽列收合 / 展開控制 (支援手機、平板與桌機)
+        // ==========================================
+        function toggleSidebar() {
+            isSidebarCollapsed = !isSidebarCollapsed;
+            localStorage.setItem('SHOPEE_NAV_COLLAPSED', isSidebarCollapsed);
+            applySidebarState();
         }
 
+        function applySidebarState() {
+            const sidebar = document.getElementById('mainSidebar');
+            const header = document.getElementById('sidebarHeader');
+            const nav = document.getElementById('mainNav');
+            const footer = document.getElementById('sidebarFooter');
+            const demoRow = document.getElementById('sidebarDemoRow');
+            const desktopIcon = document.getElementById('desktopCollapseIcon');
+            const mobileIcon = document.getElementById('mobileCollapseIcon');
+            const tabletIcon = document.getElementById('tabletCollapseIcon');
+            const collapsedBadge = document.getElementById('collapsedTabBadge');
+
+            if (isSidebarCollapsed) {
+                // 桌機版：縮窄為 76px 純圖示迷你側邊欄
+                sidebar.classList.remove('lg:w-56', 'xl:w-60');
+                sidebar.classList.add('lg:w-[76px]');
+                header.classList.remove('lg:p-5');
+                header.classList.add('lg:p-3', 'lg:flex-col', 'lg:gap-2.5');
+
+                // 手機 & 平板版：隱藏導覽選單列，只留單行極簡頂欄；桌機維持顯示圖示
+                nav.classList.remove('flex');
+                nav.classList.add('hidden', 'lg:flex');
+
+                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('lg:hidden'));
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('lg:justify-start', 'lg:px-4');
+                    btn.classList.add('lg:justify-center', 'lg:px-0');
+                });
+
+                if (footer) {
+                    footer.classList.remove('p-4');
+                    footer.classList.add('p-2.5');
+                }
+                if (demoRow) {
+                    demoRow.classList.remove('justify-between');
+                    demoRow.classList.add('justify-center');
+                }
+                if (collapsedBadge) collapsedBadge.classList.remove('hidden');
+
+                if (desktopIcon) desktopIcon.className = 'fa-solid fa-angles-right';
+                if (mobileIcon) mobileIcon.className = 'fa-solid fa-chevron-down';
+                if (tabletIcon) tabletIcon.className = 'fa-solid fa-chevron-down';
+            } else {
+                // 展開還原完整導覽列
+                sidebar.classList.remove('lg:w-[76px]');
+                sidebar.classList.add('lg:w-56', 'xl:w-60');
+                header.classList.remove('lg:p-3', 'lg:flex-col', 'lg:gap-2.5');
+                header.classList.add('lg:p-5');
+
+                nav.classList.remove('hidden');
+                nav.classList.add('flex');
+
+                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('lg:hidden'));
+                document.querySelectorAll('.tab-btn').forEach(btn => {
+                    btn.classList.remove('lg:justify-center', 'lg:px-0');
+                    btn.classList.add('lg:justify-start', 'lg:px-4');
+                });
+
+                if (footer) {
+                    footer.classList.remove('p-2.5');
+                    footer.classList.add('p-4');
+                }
+                if (demoRow) {
+                    demoRow.classList.remove('justify-center');
+                    demoRow.classList.add('justify-between');
+                }
+                if (collapsedBadge) collapsedBadge.classList.add('hidden');
+
+                if (desktopIcon) desktopIcon.className = 'fa-solid fa-angles-left';
+                if (mobileIcon) mobileIcon.className = 'fa-solid fa-chevron-up';
+                if (tabletIcon) tabletIcon.className = 'fa-solid fa-chevron-up';
+            }
+        }
+
+        // ==========================================
+        // 頁籤切換邏輯
+        // ==========================================
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const targetSection = document.getElementById('tab-' + tabId);
+            if (targetSection) targetSection.classList.remove('hidden');
+
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20', 'font-bold');
+                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60', 'border-transparent', 'font-semibold');
+            });
+
+            const activeBtn = document.getElementById('nav-' + tabId);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60', 'border-transparent', 'font-semibold');
+                activeBtn.classList.add('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20', 'font-bold');
+            }
+
+            const tabNames = {
+                analytics: '業績訂單',
+                highCommission: '高佣選品',
+                converter: '渠道轉換'
+            };
+            const collapsedBadge = document.getElementById('collapsedTabBadge');
+            if (collapsedBadge && tabNames[tabId]) {
+                collapsedBadge.innerText = tabNames[tabId];
+            }
+        }
+
+        // ==========================================
+        // 自訂通知提示框 (無阻塞 Toast)
+        // ==========================================
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            
+            const styles = {
+                success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
+                error: 'bg-red-950/95 border-red-500/50 text-red-200',
+                warning: 'bg-amber-950/95 border-amber-500/50 text-amber-200',
+                info: 'bg-slate-900/95 border-purple-500/50 text-purple-200'
+            };
+            const icons = {
+                success: 'fa-circle-check text-emerald-400',
+                error: 'fa-circle-exclamation text-red-400',
+                warning: 'fa-triangle-exclamation text-amber-400',
+                info: 'fa-circle-info text-purple-400'
+            };
+
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl border shadow-xl backdrop-blur-md text-xs font-medium transition-all duration-300 translate-y-2 opacity-0 ${styles[type] || styles.info}`;
+            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-sm"></i><span>${message}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // ==========================================
+        // 測試模式與 GAS 設定管理
+        // ==========================================
         function toggleDemoMode(sourceEl) {
             const desktopToggle = document.getElementById('demoModeToggle');
             const mobileToggle = document.getElementById('demoModeToggleMobile');
+            const tabletToggle = document.getElementById('demoModeToggleTablet');
             if (sourceEl) {
                 isDemoMode = sourceEl.checked;
             } else if (desktopToggle) {
@@ -324,6 +499,7 @@
             }
             if (desktopToggle) desktopToggle.checked = isDemoMode;
             if (mobileToggle) mobileToggle.checked = isDemoMode;
+            if (tabletToggle) tabletToggle.checked = isDemoMode;
 
             const gasWarn = document.getElementById('gasWarning');
             if (gasWarn) {
@@ -341,357 +517,240 @@
             if (gasApiUrl && gasApiUrl !== "請在此填寫你的_GAS_網址") {
                 if (document.getElementById('demoModeToggle')) document.getElementById('demoModeToggle').checked = false;
                 if (document.getElementById('demoModeToggleMobile')) document.getElementById('demoModeToggleMobile').checked = false;
+                if (document.getElementById('demoModeToggleTablet')) document.getElementById('demoModeToggleTablet').checked = false;
+                showToast('GAS API 網址已儲存！', 'success');
             }
             toggleDemoMode();
         }
 
+        // ==========================================
+        // 日期區間處理邏輯
+        // ==========================================
         function handleDateSelectChange() {
-            const daysSelect = document.getElementById('reportDaysSelect');
-            const customContainer = document.getElementById('customDateContainer');
-            if (!daysSelect || !customContainer) return;
-
-            if (daysSelect.value === 'custom') {
-                customContainer.classList.remove('hidden');
-                customContainer.classList.add('flex');
+            const selectVal = document.getElementById('reportDaysSelect').value;
+            const container = document.getElementById('customDateContainer');
+            if (selectVal === 'custom') {
+                container.classList.remove('hidden');
+                container.classList.add('flex');
             } else {
-                customContainer.classList.add('hidden');
-                customContainer.classList.remove('flex');
+                container.classList.add('hidden');
+                container.classList.remove('flex');
             }
         }
 
-        // ===============================================
-        // 訂單查詢與排序模組
-        // ===============================================
-        async function fetchConversionReport() {
-            const tableBody = document.getElementById('orderTableBody');
-            const daysSelect = document.getElementById('reportDaysSelect');
-            const searchInput = document.getElementById('orderSearchInput');
-            
-            const timeRange = daysSelect ? daysSelect.value : "7";
-            const keyword = searchInput ? searchInput.value.trim() : "";
-            tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500"><i class="fa-solid fa-spinner animate-spin text-lg"></i> 正在載入歷史訂單數據...</td></tr>`;
+        function getDateRangeParams() {
+            const selectVal = document.getElementById('reportDaysSelect').value;
+            const now = new Date();
+            const nowSec = Math.floor(now.getTime() / 1000);
 
-            let nodes = [];
-            if (isDemoMode) {
-                nodes = getMockConversionData();
-                if (keyword) nodes = nodes.filter(o => o.orderSn.toLowerCase().includes(keyword.toLowerCase()) || o.subId1.toLowerCase().includes(keyword.toLowerCase()) || o.items.some(i => i.itemName.toLowerCase().includes(keyword.toLowerCase())));
+            if (selectVal === '1') {
+                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+                return { startTime: Math.floor(startOfToday.getTime() / 1000), endTime: nowSec };
+            } else if (selectVal === 'yesterday') {
+                const startYest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
+                const endYest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
+                return { startTime: Math.floor(startYest.getTime() / 1000), endTime: Math.floor(endYest.getTime() / 1000) };
+            } else if (selectVal === 'lastWeek') {
+                const dayOfWeek = now.getDay() || 7;
+                const startLastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek - 6, 0, 0, 0);
+                const endLastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 23, 59, 59);
+                return { startTime: Math.floor(startLastWeek.getTime() / 1000), endTime: Math.floor(endLastWeek.getTime() / 1000) };
+            } else if (selectVal === 'lastMonth') {
+                const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
+                const endLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
+                return { startTime: Math.floor(startLastMonth.getTime() / 1000), endTime: Math.floor(endLastMonth.getTime() / 1000) };
+            } else if (selectVal === 'custom') {
+                const startStr = document.getElementById('customStartDate').value;
+                const endStr = document.getElementById('customEndDate').value;
+                const startObj = startStr ? new Date(startStr + 'T00:00:00') : new Date(now.getTime() - 7 * 86400000);
+                const endObj = endStr ? new Date(endStr + 'T23:59:59') : now;
+                return { startTime: Math.floor(startObj.getTime() / 1000), endTime: Math.floor(endObj.getTime() / 1000) };
             } else {
-                try {
-                    let fetchUrl = `${gasApiUrl}?action=getConversionReport&limit=500&keyword=${encodeURIComponent(keyword)}`;
-                    
-                    if (timeRange === '1') {
-                        const now = new Date();
-                        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-                        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-                        fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                    } else if (timeRange === 'yesterday') {
-                        const now = new Date();
-                        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
-                        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
-                        fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                    } else if (timeRange === 'lastWeek') {
-                        const now = new Date();
-                        const day = now.getDay(); 
-                        const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day - 7, 0, 0, 0);
-                        const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day - 1, 23, 59, 59);
-                        fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                    } else if (timeRange === 'lastMonth') {
-                        const now = new Date();
-                        const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
-                        const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-                        fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                    } else if (timeRange === 'custom') {
-                        const startVal = document.getElementById('customStartDate').value;
-                        const endVal = document.getElementById('customEndDate').value;
-                        if (startVal && endVal) {
-                            const start = new Date(startVal); start.setHours(0, 0, 0, 0);
-                            const end = new Date(endVal); end.setHours(23, 59, 59, 999);
-                            fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
+                return { days: selectVal };
+            }
+        }
+
+        // ==========================================
+        // 取得轉換成效報表 (訂單查詢)
+        // ==========================================
+        async function fetchConversionReport() {
+            const tbody = document.getElementById('orderTableBody');
+            const keyword = document.getElementById('orderSearchInput').value.trim();
+
+            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-purple-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在載入訂單數據...</td></tr>`;
+
+            if (isDemoMode) {
+                setTimeout(() => {
+                    const nowSec = Math.floor(Date.now() / 1000);
+                    let mockOrders = [
+                        {
+                            orderSn: "261114A89K2L1M",
+                            purchaseTime: nowSec - 3600 * 3,
+                            orderStatus: "PENDING",
+                            totalCommission: 148.50,
+                            subId1: "AP----",
+                            items: [
+                                { itemName: "【官方直營】極潤玻尿酸保濕修護精華液 50ml 買一送一組", itemPrice: 1280, qty: 1, estimatedCommission: 115.20 },
+                                { itemName: "神經醯胺舒緩修護化妝水 200ml 敏感肌適用", itemPrice: 450, qty: 1, estimatedCommission: 33.30 }
+                            ]
+                        },
+                        {
+                            orderSn: "261113B72P9Q4R",
+                            purchaseTime: nowSec - 86400 * 1.2,
+                            orderStatus: "COMPLETED",
+                            totalCommission: 320.00,
+                            subId1: "instagram",
+                            items: [
+                                { itemName: "無線降噪藍牙耳機 Pro 版 超長續航運動防水", itemPrice: 3200, qty: 1, estimatedCommission: 320.00 }
+                            ]
+                        },
+                        {
+                            orderSn: "261112C15X8W3E",
+                            purchaseTime: nowSec - 86400 * 2.5,
+                            orderStatus: "COMPLETED",
+                            totalCommission: 85.40,
+                            subId1: "----",
+                            items: [
+                                { itemName: "多功能桌面磁吸無線充電座 支援三合一快充", itemPrice: 890, qty: 1, estimatedCommission: 85.40 }
+                            ]
+                        },
+                        {
+                            orderSn: "261110D44Z6V9T",
+                            purchaseTime: nowSec - 86400 * 4.1,
+                            orderStatus: "CANCELLED",
+                            totalCommission: 0,
+                            subId1: "line_group",
+                            items: [
+                                { itemName: "日系簡約大容量防潑水電腦後背包 15.6吋", itemPrice: 1150, qty: 1, estimatedCommission: 0 }
+                            ]
                         }
-                    } else {
-                        fetchUrl += `&days=${timeRange}`;
+                    ];
+
+                    if (keyword) {
+                        const kw = keyword.toLowerCase();
+                        mockOrders = mockOrders.filter(o =>
+                            o.orderSn.toLowerCase().includes(kw) ||
+                            o.subId1.toLowerCase().includes(kw) ||
+                            o.items.some(it => it.itemName.toLowerCase().includes(kw))
+                        );
                     }
 
-                    const res = await fetch(fetchUrl);
-                    const data = await res.json();
-                    if (data.success && data.report) nodes = data.report.nodes || [];
-                } catch (e) {
-                    tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-400">載入失敗：${e.message}</td></tr>`;
-                    return;
-                }
+                    currentOrdersData = mockOrders;
+                    calculateKPIs(currentOrdersData);
+                    renderOrderTable(currentOrdersData);
+                }, 300);
+                return;
             }
 
-            currentOrdersData = nodes;
-            calculateKPIs(nodes);
-            sortOrders('time', true); 
+            if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-amber-400">請先點擊設定按鈕輸入 GAS API 網址，或開啟「模擬測試模式」。</td></tr>`;
+                return;
+            }
+
+            try {
+                const rangeParams = getDateRangeParams();
+                const urlObj = new URL(gasApiUrl);
+                urlObj.searchParams.set('action', 'getConversionReport');
+                if (rangeParams.days) urlObj.searchParams.set('days', rangeParams.days);
+                if (rangeParams.startTime) urlObj.searchParams.set('startTime', rangeParams.startTime);
+                if (rangeParams.endTime) urlObj.searchParams.set('endTime', rangeParams.endTime);
+                if (keyword) urlObj.searchParams.set('keyword', keyword);
+
+                const response = await fetch(urlObj.toString());
+                const data = await response.json();
+
+                if (!data.success) throw new Error(data.error || "API 回傳失敗");
+
+                currentOrdersData = (data.report && data.report.nodes) ? data.report.nodes : [];
+                calculateKPIs(currentOrdersData);
+                renderOrderTable(currentOrdersData);
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 載入失敗：${err.message}</td></tr>`;
+            }
         }
 
+        // ==========================================
+        // 計算 KPI 數據卡片
+        // ==========================================
         function calculateKPIs(nodes) {
-            let estTotal = 0; let pendingCount = 0; const subIdCount = {};
+            let estTotal = 0;
+            let pendingCount = 0;
+            const subIdCount = {};
+
             nodes.forEach(order => {
-                estTotal += parseFloat(order.totalCommission || 0);
-                if (order.orderStatus === 'PAID' || order.orderStatus === 'PENDING') pendingCount++;
-                if (order.subId1 && order.subId1 !== '無') subIdCount[order.subId1] = (subIdCount[order.subId1] || 0) + 1;
+                if (order.orderStatus !== 'CANCELLED') {
+                    estTotal += parseFloat(order.totalCommission || 0);
+                }
+                if (order.orderStatus === 'PAID' || order.orderStatus === 'PENDING') {
+                    pendingCount++;
+                }
+                const cleanSub = (order.subId1 || '').trim();
+                if (cleanSub && cleanSub !== '無' && !/^-+$/.test(cleanSub)) {
+                    subIdCount[cleanSub] = (subIdCount[cleanSub] || 0) + 1;
+                }
             });
+
             document.getElementById('kpiEstCommission').innerText = `$${estTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             document.getElementById('kpiTotalOrders').innerText = nodes.length;
             document.getElementById('kpiPendingOrders').innerText = pendingCount;
-            document.getElementById('kpiTopSubId').innerText = Object.keys(subIdCount).length > 0 ? Object.keys(subIdCount).reduce((a, b) => subIdCount[a] > subIdCount[b] ? a : b) : '-';
+            document.getElementById('kpiTopSubId').innerText = Object.keys(subIdCount).length > 0
+                ? Object.keys(subIdCount).reduce((a, b) => subIdCount[a] > subIdCount[b] ? a : b)
+                : '-';
         }
 
-        function sortOrders(column, forceDefault = false) {
-            if (!forceDefault) {
-                if (sortState.column === column) sortState.asc = !sortState.asc;
-                else { sortState.column = column; sortState.asc = (column === 'time' || column === 'commission') ? false : true; }
-            } else { sortState = { column: 'time', asc: false }; }
+        // ==========================================
+        // 表格欄位排序邏輯
+        // ==========================================
+        function sortOrders(column) {
+            if (sortState.column === column) {
+                sortState.asc = !sortState.asc;
+            } else {
+                sortState.column = column;
+                sortState.asc = false;
+            }
 
-            currentOrdersData.sort((a, b) => {
-                let valA, valB;
-                const itemA = a.items?.[0] || {};
-                const itemB = b.items?.[0] || {};
-                switch(column) {
-                    case 'time': valA = a.purchaseTime || 0; valB = b.purchaseTime || 0; break;
-                    case 'name': valA = itemA.itemName || ''; valB = itemB.itemName || ''; break;
-                    case 'commission': valA = parseFloat(a.totalCommission || itemA.estimatedCommission || 0); valB = parseFloat(b.totalCommission || itemB.estimatedCommission || 0); break;
-                    case 'status': valA = a.orderStatus || ''; valB = b.orderStatus || ''; break;
-                    case 'subid': valA = a.subId1 || ''; valB = b.subId1 || ''; break;
+            ['time', 'name', 'commission', 'status', 'subid'].forEach(col => {
+                const icon = document.getElementById('sort-' + col);
+                if (!icon) return;
+                if (col === column) {
+                    icon.className = sortState.asc
+                        ? 'fa-solid fa-sort-up text-[10px] text-purple-400 ml-1'
+                        : 'fa-solid fa-sort-down text-[10px] text-purple-400 ml-1';
+                } else {
+                    icon.className = 'fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1';
                 }
+            });
+
+            const sorted = [...currentOrdersData].sort((a, b) => {
+                let valA, valB;
+                if (column === 'time') {
+                    valA = a.purchaseTime || 0;
+                    valB = b.purchaseTime || 0;
+                } else if (column === 'name') {
+                    valA = (a.items && a.items[0] ? a.items[0].itemName : '').toLowerCase();
+                    valB = (b.items && b.items[0] ? b.items[0].itemName : '').toLowerCase();
+                } else if (column === 'commission') {
+                    valA = parseFloat(a.totalCommission || 0);
+                    valB = parseFloat(b.totalCommission || 0);
+                } else if (column === 'status') {
+                    valA = a.orderStatus || '';
+                    valB = b.orderStatus || '';
+                } else if (column === 'subid') {
+                    valA = (a.subId1 || '').toLowerCase();
+                    valB = (b.subId1 || '').toLowerCase();
+                }
+
                 if (valA < valB) return sortState.asc ? -1 : 1;
                 if (valA > valB) return sortState.asc ? 1 : -1;
                 return 0;
             });
 
-            renderOrderTable();
-            updateSortIcons();
+            renderOrderTable(sorted);
         }
 
-        function updateSortIcons() {
-            const columns = ['time', 'name', 'commission', 'status', 'subid'];
-            columns.forEach(col => {
-                const iconEl = document.getElementById(`sort-${col}`);
-                if (iconEl) {
-                    if (sortState.column === col) iconEl.className = `fa-solid ${sortState.asc ? 'fa-sort-up' : 'fa-sort-down'} text-[12px] text-purple-400 ml-1`;
-                    else iconEl.className = `fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1`;
-                }
-            });
-        }
-
-        function renderOrderTable() {
-            const tableBody = document.getElementById('orderTableBody');
-            tableBody.innerHTML = '';
-            
-            if (currentOrdersData.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">此區間或搜尋條件下尚無分潤訂單紀錄</td></tr>`;
-                return;
-            }
-
-            // 新增 index 變數用來產生序號 (No.)，並支援同一筆訂單多商品垂直堆疊顯示
-            currentOrdersData.forEach((order, index) => {
-                const items = (order.items && order.items.length > 0)
-                    ? order.items
-                    : [{ itemName: '未知商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
-                const isMulti = items.length > 1;
-                const dateStr = new Date(order.purchaseTime * 1000).toLocaleString('zh-TW', { hour12: false });
-                const totalComm = parseFloat(order.totalCommission || 0).toFixed(2);
-
-                // 商品名稱多行堆疊
-                const namesHtml = items.map((it, idx) => `
-                    <div class="truncate ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}" title="${it.itemName}">
-                        ${isMulti ? `<span class="text-[10px] text-purple-400 font-mono mr-1">${idx + 1}.</span>` : ''}${it.itemName}
-                    </div>
-                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400 font-semibold">共 ${items.length} 項商品</div>` : '');
-
-                // 數量與單價多行堆疊 (與左側商品行高對齊)
-                const qtyPriceHtml = items.map((it, idx) => `
-                    <div class="${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
-                        ${it.qty} x $${parseFloat(it.itemPrice || 0).toLocaleString()}
-                    </div>
-                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400">訂單合計</div>` : '');
-
-                // 預估佣金多行堆疊 + 多商品時底部顯示總佣金
-                const commHtml = items.map((it, idx) => {
-                    const c = parseFloat(it.estimatedCommission || 0).toFixed(2);
-                    return `
-                        <div class="${isMulti ? 'text-slate-300 font-normal' : 'font-bold text-emerald-400'} ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
-                            +$${c}
-                        </div>
-                    `;
-                }).join('') + (isMulti ? `<div class="pt-1 font-bold text-emerald-400 border-t border-slate-700/80">+$${totalComm}</div>` : '');
-                
-                tableBody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-slate-800/40 transition-colors align-top">
-                        <td class="p-3 text-center text-slate-500 font-mono text-[10px] bg-slate-800/20">${index + 1}</td>
-                        <td class="p-3 font-mono whitespace-nowrap"><div class="text-white font-bold">${order.orderSn}</div><div class="text-[10px] text-slate-500">${dateStr}</div></td>
-                        <td class="p-3 max-w-[240px] space-y-1.5">${namesHtml}</td>
-                        <td class="p-3 font-mono whitespace-nowrap space-y-1.5">${qtyPriceHtml}</td>
-                        <td class="p-3 font-mono whitespace-nowrap space-y-1.5">${commHtml}</td>
-                        <td class="p-3 whitespace-nowrap">${getStatusBadge(order.orderStatus)}</td>
-                        <td class="p-3 whitespace-nowrap">${getSubIdBadge(order.subId1)}</td>
-                    </tr>
-                `);
-            });
-        }
-
-        // ===============================================
-        // 高佣金商品查詢 (限制 50 筆)
-        // ===============================================
-        async function fetchHighCommissionProducts() {
-            const grid = document.getElementById('productGrid');
-            const keyword = document.getElementById('productSearchKey').value.trim();
-            
-            if (keyword.startsWith('http') || /^[\d\.\-]+$/.test(keyword)) {
-                grid.innerHTML = `
-                    <div class="col-span-full p-12 text-center text-amber-400 bg-slate-900/50 border border-slate-800 rounded-2xl">
-                        <i class="fa-solid fa-triangle-exclamation text-3xl mb-3"></i>
-                        <h4 class="text-sm font-bold text-white mb-1">蝦皮 API 搜尋限制</h4>
-                        <p class="text-xs text-slate-400 leading-relaxed">
-                            高佣金庫只能使用 <span class="text-amber-400 font-bold">商品名稱（如：保濕精華）</span> 進行文字比對。<br>
-                            請勿輸入網址或純數字 ID。<br><br>
-                            👉 若要將網址轉換為分潤連結，請使用 <span class="text-cyan-400">SubID 渠道轉換器</span>
-                        </p>
-                    </div>`;
-                return;
-            }
-
-            grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500"><i class="fa-solid fa-spinner animate-spin text-2xl"></i><p class="mt-2 text-xs">搜尋高分潤商品中...</p></div>`;
-
-            let products = [];
-            if (isDemoMode) {
-                products = getMockProductData();
-            } else {
-                try {
-                    const res = await fetch(`${gasApiUrl}?action=getHighCommissionProducts&keyword=${encodeURIComponent(keyword)}&limit=50`);
-                    const data = await res.json();
-                    if (data.success && data.products) products = data.products.nodes || [];
-                } catch (e) {
-                    grid.innerHTML = `<div class="col-span-full p-8 text-center text-red-400 text-xs">搜尋發生錯誤：${e.message}</div>`;
-                    return;
-                }
-            }
-
-            grid.innerHTML = '';
-            products.forEach(p => {
-                grid.insertAdjacentHTML('beforeend', `
-                    <div class="glass-card rounded-2xl overflow-hidden flex flex-col justify-between hover:border-amber-500/40 transition-all">
-                        <div class="p-4 space-y-3">
-                            <div class="flex justify-between items-start gap-2">
-                                <span class="px-2 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-[10px] font-extrabold">
-                                    加碼 ${p.commissionRate}%
-                                </span>
-                                <span class="text-[10px] text-slate-400 font-medium truncate">${p.shopName || '蝦皮店家'}</span>
-                            </div>
-                            <h4 class="text-xs font-bold text-white line-clamp-2 leading-relaxed">${p.productName}</h4>
-                            <div class="flex items-baseline justify-between pt-2">
-                                <span class="text-lg font-black text-amber-400">$${p.price}</span>
-                                <span class="text-xs text-emerald-400 font-bold">預估拿 $${p.commission}</span>
-                            </div>
-                        </div>
-                        <div class="p-3 border-t border-slate-800/80 bg-slate-900/40">
-                            <button onclick="quickConvert('${p.productLink}')" class="w-full py-2 bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-200 rounded-xl text-xs font-bold transition-all">
-                                <i class="fa-solid fa-link"></i> 一鍵轉分潤網址
-                            </button>
-                        </div>
-                    </div>
-                `);
-            });
-        }
-
-        // ===============================================
-        // 生成 SubID 連結 (支援 5 組) + 補回按鈕 UI
-        // ===============================================
-        async function generateSubIdLink() {
-            const rawUrl = document.getElementById('convertInputUrl').value.trim();
-            const s1 = document.getElementById('subId1Input').value.trim();
-            const s2 = document.getElementById('subId2Input').value.trim();
-            const s3 = document.getElementById('subId3Input').value.trim();
-            const s4 = document.getElementById('subId4Input').value.trim();
-            const s5 = document.getElementById('subId5Input').value.trim();
-
-            if (!rawUrl) { alert('請輸入有效網址'); return; }
-
-            let shortLink = '';
-            if (isDemoMode) {
-                shortLink = `https://s.shopee.tw/an_demo?sub_id=${s1 || 'default'}`;
-            } else {
-                try {
-                    const fetchUrl = `${gasApiUrl}?action=generateShortLink&url=${encodeURIComponent(rawUrl)}` + 
-                                     `&subId1=${encodeURIComponent(s1)}&subId2=${encodeURIComponent(s2)}` + 
-                                     `&subId3=${encodeURIComponent(s3)}&subId4=${encodeURIComponent(s4)}&subId5=${encodeURIComponent(s5)}`;
-                    const res = await fetch(fetchUrl);
-                    const data = await res.json();
-                    if (data.success) shortLink = data.shortLink;
-                    else throw new Error(data.error);
-                } catch (e) {
-                    alert(`轉碼失敗: ${e.message}`);
-                    return;
-                }
-            }
-
-            const list = document.getElementById('convertedHistoryList');
-            if (list.querySelector('.italic')) list.innerHTML = '';
-            
-            const activeSubIds = [s1, s2, s3, s4, s5].filter(Boolean).join(', ');
-            const uniqueId = 'res-' + Math.random().toString(36).substr(2, 9);
-
-            list.insertAdjacentHTML('afterbegin', `
-                <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl space-y-2">
-                    <div class="flex justify-between items-center text-[10px] text-slate-400">
-                        <span class="truncate max-w-[200px]" title="${rawUrl}">原: ${rawUrl}</span>
-                        <span class="px-1.5 py-0.5 bg-cyan-950 text-cyan-300 rounded border border-cyan-800 font-mono">SubID: ${activeSubIds || '無'}</span>
-                    </div>
-                    <div id="${uniqueId}" class="text-xs font-mono font-bold text-cyan-300 break-all">${shortLink}</div>
-                    
-                    <div class="flex gap-2 pt-1">
-                        <button onclick="copyGeneratedLink('${uniqueId}', this)" class="flex-1 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-slate-950 font-bold rounded-lg text-xs transition-all flex justify-center items-center gap-1.5">
-                            <i class="fa-regular fa-copy"></i> 複製短網址
-                        </button>
-                        <a href="${shortLink}" target="_blank" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-bold transition-colors flex justify-center items-center gap-1.5">
-                            開啟 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                        </a>
-                    </div>
-                </div>
-            `);
-        }
-
-        window.copyGeneratedLink = function(elementId, btnEl) {
-            const textToCopy = document.getElementById(elementId).innerText;
-            const textArea = document.createElement("textarea");
-            textArea.value = textToCopy;
-            document.body.appendChild(textArea);
-            textArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(textArea);
-            
-            const originalHtml = btnEl.innerHTML;
-            btnEl.innerHTML = '<i class="fa-solid fa-check"></i> 已複製';
-            btnEl.classList.remove('bg-cyan-600', 'hover:bg-cyan-500');
-            btnEl.classList.add('bg-emerald-500', 'hover:bg-emerald-400');
-            
-            setTimeout(() => {
-                btnEl.innerHTML = originalHtml;
-                btnEl.classList.remove('bg-emerald-500', 'hover:bg-emerald-400');
-                btnEl.classList.add('bg-cyan-600', 'hover:bg-cyan-500');
-            }, 1500);
-        };
-
-        function quickConvert(url) {
-            switchTab('converter');
-            document.getElementById('convertInputUrl').value = url;
-        }
-
-        function getStatusBadge(status) {
-            switch(status) {
-                case 'UNPAID': return `<span class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px]">未付款</span>`;
-                case 'PENDING': case 'PAID': return `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded text-[10px] font-bold">已付款</span>`;
-                case 'COMPLETED': return `<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[10px] font-bold">已完成結算</span>`;
-                case 'CANCELLED': return `<span class="px-2 py-0.5 bg-red-500/20 text-red-300 border border-red-500/30 rounded text-[10px] font-bold">已取消/退貨</span>`;
-                default: return `<span class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px]">${status}</span>`;
-            }
-        }
-
-        // ===============================================
-        // 更新：寬鬆認定 AP 標籤，讓 AP---- 也能顯示紫色機器人圖標
-        // ===============================================
+        // ==========================================
+        // SubID 標籤徽章渲染 (寬鬆認定 AP 開頭)
+        // ==========================================
         function getSubIdBadge(subId) {
             if (!subId || subId.toString().trim() === '無' || subId.toString().trim() === 'null' || subId.toString().trim() === '') {
                 return `<span class="px-2 py-0.5 bg-slate-800 text-slate-400 rounded-lg text-[10px] font-mono border border-slate-700">無標籤</span>`;
@@ -699,136 +758,348 @@
             const cleanSubId = subId.toString().trim();
             const lowerSubId = cleanSubId.toLowerCase();
             
-            // 使用 startsWith 進行寬鬆認定，只要開頭是 ap (例如 ap, ap----, ap-) 都算
             if (lowerSubId.startsWith('ap')) {
                 return `<span class="px-2.5 py-1 bg-purple-600/30 text-purple-200 border border-purple-400/60 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm shadow-purple-900/50"><i class="fa-solid fa-robot text-purple-300"></i>${cleanSubId}</span>`;
             }
             return `<span class="px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-700/60 rounded-lg text-[11px] font-mono inline-flex items-center gap-1"><i class="fa-solid fa-tag text-cyan-400"></i>${cleanSubId}</span>`;
         }
 
-        // ===============================================
-        // 資料匯出與雲端補齊功能
-        // ===============================================
-        function exportToCSV() {
-            if (currentOrdersData.length === 0) {
-                alert("目前沒有資料可以匯出！請先搜尋訂單。");
+        // ==========================================
+        // 訂單狀態徽章渲染
+        // ==========================================
+        function getStatusBadge(status) {
+            const s = (status || '').toUpperCase();
+            if (s === 'COMPLETED') {
+                return `<span class="px-2.5 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-circle-check text-[10px]"></i>已完成</span>`;
+            }
+            if (s === 'CANCELLED') {
+                return `<span class="px-2.5 py-1 bg-red-500/15 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-circle-xmark text-[10px]"></i>已取消</span>`;
+            }
+            return `<span class="px-2.5 py-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock text-[10px]"></i>審核中</span>`;
+        }
+
+        // ==========================================
+        // 渲染訂單表格 (支援一筆訂單多商品垂直展開)
+        // ==========================================
+        function renderOrderTable(orders) {
+            const tbody = document.getElementById('orderTableBody');
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">查無符合條件的訂單資料</td></tr>`;
                 return;
             }
 
-            let csvContent = "\uFEFF"; // 加上 BOM 讓 Excel 辨識 UTF-8
-            csvContent += "訂單編號,訂單時間,購買商品,數量明細,單價明細,訂單總預估佣金,訂單狀態,渠道標籤(SubID)\n";
+            tbody.innerHTML = orders.map((order, idx) => {
+                const dateObj = new Date((order.purchaseTime || 0) * 1000);
+                const formattedTime = dateObj.toLocaleString('zh-TW', {
+                    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
+                });
 
-            currentOrdersData.forEach(order => {
+                const items = (order.items && order.items.length > 0)
+                    ? order.items
+                    : [{ itemName: '蝦皮商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
+
+                const isMulti = items.length > 1;
+
+                const namesHtml = items.map(it => `
+                    <div class="leading-snug py-0.5 ${isMulti ? 'border-b border-slate-800/70 last:border-b-0' : ''}" title="${it.itemName}">
+                        ${it.itemName}
+                    </div>
+                `).join('') + (isMulti ? `<div class="text-[10px] text-purple-400 font-semibold pt-1">共 ${items.length} 項商品</div>` : '');
+
+                const qtyPriceHtml = items.map(it => `
+                    <div class="font-mono text-slate-400 py-0.5 ${isMulti ? 'border-b border-slate-800/70 last:border-b-0' : ''}">
+                        x${it.qty || 1} <span class="text-slate-600">/</span> $${Number(it.itemPrice || 0).toLocaleString()}
+                    </div>
+                `).join('') + (isMulti ? `<div class="text-[10px] text-transparent select-none pt-1">-</div>` : '');
+
+                const commHtml = items.map(it => `
+                    <div class="font-mono font-semibold text-emerald-400/90 py-0.5 ${isMulti ? 'border-b border-slate-800/70 last:border-b-0' : ''}">
+                        +$${parseFloat(it.estimatedCommission || 0).toFixed(2)}
+                    </div>
+                `).join('') + (isMulti ? `<div class="text-[11px] font-mono font-extrabold text-emerald-300 pt-1">總計 +$${parseFloat(order.totalCommission || 0).toFixed(2)}</div>` : '');
+
+                return `
+                    <tr class="hover:bg-slate-800/35 transition-colors">
+                        <td class="p-3 text-center text-slate-500 font-mono align-top">${idx + 1}</td>
+                        <td class="p-3 align-top whitespace-nowrap">
+                            <div class="font-mono font-bold text-slate-200">${order.orderSn}</div>
+                            <div class="text-[11px] text-slate-500 mt-0.5">${formattedTime}</div>
+                        </td>
+                        <td class="p-3 align-top max-w-xs">${namesHtml}</td>
+                        <td class="p-3 align-top whitespace-nowrap">${qtyPriceHtml}</td>
+                        <td class="p-3 align-top whitespace-nowrap">${commHtml}</td>
+                        <td class="p-3 align-top whitespace-nowrap">${getStatusBadge(order.orderStatus)}</td>
+                        <td class="p-3 align-top whitespace-nowrap">${getSubIdBadge(order.subId1)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // ==========================================
+        // 匯出 CSV 功能
+        // ==========================================
+        function exportToCSV() {
+            if (!currentOrdersData || currentOrdersData.length === 0) {
+                showToast('目前沒有可匯出的訂單資料', 'warning');
+                return;
+            }
+
+            const headers = ['訂單編號', '訂單時間', '購買商品', '數量', '單價', '預估佣金', '訂單狀態', 'SubID'];
+            const rows = currentOrdersData.map(order => {
+                const dateStr = new Date((order.purchaseTime || 0) * 1000).toLocaleString('zh-TW', { hour12: false });
                 const items = (order.items && order.items.length > 0) ? order.items : [{}];
-                const dateStr = new Date(order.purchaseTime * 1000).toLocaleString('zh-TW', { hour12: false });
-                const totalComm = parseFloat(order.totalCommission || items[0].estimatedCommission || 0).toFixed(2);
-                
-                // 多商品時用 " | " 串接在同一格，避免 Excel 跑版
-                const combinedNames = items.map(it => it.itemName || '').join(' | ');
-                const combinedQtys = items.map(it => it.qty || 1).join(' | ');
-                const combinedPrices = items.map(it => it.itemPrice || 0).join(' | ');
-                const safeName = `"${combinedNames.replace(/"/g, '""')}"`;
-                
-                csvContent += `${order.orderSn},${dateStr},${safeName},"${combinedQtys}","${combinedPrices}",${totalComm},${order.orderStatus},${order.subId1 || '無'}\n`;
+                const names = items.map(i => (i.itemName || '').replace(/"/g, '""')).join(' | ');
+                const qtys = items.map(i => i.qty || 1).join(' | ');
+                const prices = items.map(i => i.itemPrice || 0).join(' | ');
+
+                return [
+                    `"${order.orderSn}"`,
+                    `"${dateStr}"`,
+                    `"${names}"`,
+                    `"${qtys}"`,
+                    `"${prices}"`,
+                    parseFloat(order.totalCommission || 0).toFixed(2),
+                    `"${order.orderStatus}"`,
+                    `"${order.subId1 || '無'}"`
+                ].join(',');
             });
 
+            const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.setAttribute("href", url);
-            link.setAttribute("download", `蝦皮分潤訂單_${new Date().toISOString().split('T')[0]}.csv`);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `shopee_orders_${new Date().toISOString().slice(0, 10)}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('CSV 報表已成功下載！', 'success');
         }
 
+        // ==========================================
+        // 補齊 / 同步歷史訂單至雲端試算表
+        // ==========================================
         async function syncToCloud() {
+            const btn = document.getElementById('btnSyncCloud');
+            const originalHtml = btn.innerHTML;
+
             if (isDemoMode) {
-                alert("測試模式無法寫入雲端資料庫！請先設定真實 API。");
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 同步中...`;
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    showToast('【測試模式】同步完成：新增 3 筆單，更新 1 筆狀態', 'success');
+                }, 800);
                 return;
             }
 
-            const btn = document.getElementById('btnSyncCloud');
-            const originalHtml = btn.innerHTML;
-            
-            const daysSelect = document.getElementById('reportDaysSelect');
-            const timeRange = daysSelect ? daysSelect.value : "7";
-
-            const confirmMsg = `即將把當前選擇的時間區間 (${timeRange === 'custom' ? '自訂區間' : timeRange}) 的歷史資料同步至 Google Sheet。\n系統會自動略過已存在的訂單，不用擔心重複！\n\n是否繼續？`;
-            if (!confirm(confirmMsg)) return;
-
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 寫入中...`;
-            btn.disabled = true;
+            if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
+                showToast('請先設定 GAS API 網址', 'warning');
+                openSettingsModal();
+                return;
+            }
 
             try {
-                let fetchUrl = `${gasApiUrl}?action=syncToSheet`;
-                
-                if (timeRange === '1') {
-                    const now = new Date();
-                    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-                    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
-                    fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                } else if (timeRange === 'yesterday') {
-                    const now = new Date();
-                    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
-                    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
-                    fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                } else if (timeRange === 'lastWeek') {
-                    const now = new Date();
-                    const day = now.getDay(); 
-                    const start = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day - 7, 0, 0, 0);
-                    const end = new Date(now.getFullYear(), now.getMonth(), now.getDate() - day - 1, 23, 59, 59);
-                    fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                } else if (timeRange === 'lastMonth') {
-                    const now = new Date();
-                    const start = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
-                    const end = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-                    fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                } else if (timeRange === 'custom') {
-                    const startVal = document.getElementById('customStartDate').value;
-                    const endVal = document.getElementById('customEndDate').value;
-                    if (startVal && endVal) {
-                        const start = new Date(startVal); start.setHours(0, 0, 0, 0);
-                        const end = new Date(endVal); end.setHours(23, 59, 59, 999);
-                        fetchUrl += `&startTime=${Math.floor(start.getTime() / 1000)}&endTime=${Math.floor(end.getTime() / 1000)}`;
-                    }
-                } else {
-                    fetchUrl += `&days=${timeRange}`;
-                }
+                btn.disabled = true;
+                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 同步中...`;
 
-                const res = await fetch(fetchUrl);
-                const data = await res.json();
-                
-                if (data.success) {
-                    alert(`✅ 同步完成！\n\n📌 處理結果：\n✨ 新增了 ${data.addedCount} 筆全新訂單\n🔄 更新了 ${data.updatedCount || 0} 筆訂單狀態`);
-                } else {
-                    throw new Error(data.error || '不明錯誤');
-                }
-            } catch (e) {
-                alert(`❌ 同步失敗：${e.message}`);
+                const rangeParams = getDateRangeParams();
+                const urlObj = new URL(gasApiUrl);
+                urlObj.searchParams.set('action', 'syncToSheet');
+                if (rangeParams.days) urlObj.searchParams.set('days', rangeParams.days);
+                if (rangeParams.startTime) urlObj.searchParams.set('startTime', rangeParams.startTime);
+                if (rangeParams.endTime) urlObj.searchParams.set('endTime', rangeParams.endTime);
+
+                const response = await fetch(urlObj.toString());
+                const data = await response.json();
+
+                if (!data.success) throw new Error(data.error || '同步失敗');
+
+                showToast(`雲端同步完成！新增 ${data.addedCount || 0} 筆，更新 ${data.updatedCount || 0} 筆狀態`, 'success');
+            } catch (err) {
+                showToast(`雲端同步發生錯誤：${err.message}`, 'error');
             } finally {
-                btn.innerHTML = originalHtml;
                 btn.disabled = false;
+                btn.innerHTML = originalHtml;
             }
         }
 
-        // Mock 數據用
-        function getMockConversionData() {
-            return [
-                { orderSn: "241016A998X12", purchaseTime: Math.floor(Date.now()/1000) - 3600, orderStatus: "PAID", totalCommission: 173, subId1: "AP----", items: [
-                    { itemName: "韓國保濕修護精華 50ml", itemPrice: 850, qty: 1, estimatedCommission: 128 },
-                    { itemName: "積雪草舒緩化妝水 200ml", itemPrice: 450, qty: 1, estimatedCommission: 45 }
-                ]},
-                { orderSn: "241016B441Z89", purchaseTime: Math.floor(Date.now()/1000) - 14400, orderStatus: "COMPLETED", totalCommission: 310, subId1: "instagram", items: [{ itemName: "主動降噪藍芽耳機 Pro", itemPrice: 1980, qty: 1, estimatedCommission: 310 }] },
-                { orderSn: "241014D883P11", purchaseTime: Math.floor(Date.now()/1000) - 172800, orderStatus: "CANCELLED", totalCommission: 0, subId1: "fb_fanpage", items: [{ itemName: "多功能輕量露營折疊椅", itemPrice: 620, qty: 1, estimatedCommission: 0 }] },
-                { orderSn: "241013E556R33", purchaseTime: Math.floor(Date.now()/1000) - 259200, orderStatus: "PAID", totalCommission: 45, subId1: "無", items: [{ itemName: "無標籤測試商品", itemPrice: 200, qty: 1, estimatedCommission: 45 }] }
-            ];
+        // ==========================================
+        // TAB 2: 高佣金爆款選品搜尋
+        // ==========================================
+        async function fetchHighCommissionProducts() {
+            const grid = document.getElementById('productGrid');
+            const keyword = document.getElementById('productSearchKey').value.trim();
+            const sortType = document.getElementById('sortCommissionSelect').value;
+
+            grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-400 glass-card rounded-2xl"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在搜尋高佣金商品...</div>`;
+
+            if (isDemoMode) {
+                setTimeout(() => {
+                    const mockProducts = [
+                        { productName: '【官方旗艦】高濃度維他命C亮白淡斑精華 30ml', price: 890, commissionRate: '18.5', commission: 164.65, shopName: '官方美妝旗艦店', productLink: 'https://shopee.tw/product/12345/67890' },
+                        { productName: '超輕量石墨烯恆溫四季被 雙人加大抗菌防蟎', price: 1480, commissionRate: '15.0', commission: 222.00, shopName: '居家生活嚴選館', productLink: 'https://shopee.tw/product/22345/77890' },
+                        { productName: 'GaN 氮化鎵 65W 三孔快速充電器 支援筆電手機', price: 599, commissionRate: '12.0', commission: 71.88, shopName: '3C 數位配件專賣', productLink: 'https://shopee.tw/product/32345/87890' },
+                        { productName: '益生菌高纖順暢酵素粉 30包/盒 專利配方', price: 750, commissionRate: '22.0', commission: 165.00, shopName: '健康生醫官方店', productLink: 'https://shopee.tw/product/42345/97890' }
+                    ];
+                    renderProductGrid(mockProducts);
+                }, 400);
+                return;
+            }
+
+            if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-400 glass-card rounded-2xl">請先設定 GAS API 網址，或開啟模擬測試模式。</div>`;
+                return;
+            }
+
+            try {
+                const urlObj = new URL(gasApiUrl);
+                urlObj.searchParams.set('action', 'getHighCommissionProducts');
+                urlObj.searchParams.set('keyword', keyword);
+                urlObj.searchParams.set('sortType', sortType);
+                urlObj.searchParams.set('limit', '50');
+
+                const response = await fetch(urlObj.toString());
+                const data = await response.json();
+
+                if (!data.success) throw new Error(data.error || '搜尋失敗');
+                renderProductGrid(data.products ? data.products.nodes : []);
+            } catch (err) {
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-red-400 glass-card rounded-2xl">搜尋發生錯誤：${err.message}</div>`;
+            }
         }
-        function getMockProductData() {
-            return [
-                { itemId: "101", productName: "【熱銷爆款】保濕精華液 50ml", price: 499, commissionRate: 18.5, commission: 92, productLink: "https://shopee.tw/product/101", shopName: "官方旗艦店" },
-                { itemId: "102", productName: "真無線藍牙降噪耳機", price: 1290, commissionRate: 15.0, commission: 193, productLink: "https://shopee.tw/product/102", shopName: "3C 數位嚴選" }
+
+        function renderProductGrid(products) {
+            const grid = document.getElementById('productGrid');
+            if (!products || products.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">找不到符合條件的高佣金商品</div>`;
+                return;
+            }
+
+            grid.innerHTML = products.map(p => `
+                <div class="glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 hover:border-amber-500/40 transition-all">
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[10px] text-slate-400 truncate"><i class="fa-solid fa-store mr-1"></i>${p.shopName || '蝦皮賣家'}</span>
+                            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-extrabold shrink-0">
+                                佣金 ${p.commissionRate}%
+                            </span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-100 line-clamp-2 leading-relaxed" title="${p.productName}">${p.productName}</h4>
+                    </div>
+                    <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
+                        <div class="flex items-baseline justify-between">
+                            <span class="text-sm font-extrabold text-white">$${Number(p.price || 0).toLocaleString()}</span>
+                            <span class="text-xs font-bold text-emerald-400">預估賺 $${parseFloat(p.commission || 0).toFixed(1)}</span>
+                        </div>
+                        <button onclick="copyStringToClipboard('${p.productLink}', '已複製推廣連結！')" class="w-full py-2 bg-slate-800 hover:bg-purple-600 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5">
+                            <i class="fa-regular fa-copy"></i> 複製推廣連結
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ==========================================
+        // TAB 3: SubID 渠道轉換器
+        // ==========================================
+        async function generateSubIdLink() {
+            const urlInput = document.getElementById('convertInputUrl').value.trim();
+            if (!urlInput) {
+                showToast('請先輸入蝦皮商品網址', 'warning');
+                document.getElementById('convertInputUrl').focus();
+                return;
+            }
+
+            const subIds = [
+                document.getElementById('subId1Input').value.trim(),
+                document.getElementById('subId2Input').value.trim(),
+                document.getElementById('subId3Input').value.trim(),
+                document.getElementById('subId4Input').value.trim(),
+                document.getElementById('subId5Input').value.trim()
             ];
+
+            const btn = document.getElementById('btnGenerateSubId');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> 生成中...`;
+
+            try {
+                let shortLink = '';
+                if (isDemoMode) {
+                    await new Promise(r => setTimeout(r, 350));
+                    shortLink = `https://s.shopee.tw/demo_${Math.random().toString(36).substring(2, 8)}`;
+                } else {
+                    if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
+                        throw new Error('請先設定 GAS API 網址');
+                    }
+                    const urlObj = new URL(gasApiUrl);
+                    urlObj.searchParams.set('action', 'generateShortLink');
+                    urlObj.searchParams.set('url', urlInput);
+                    subIds.forEach((val, i) => {
+                        if (val) urlObj.searchParams.set(`subId${i + 1}`, val);
+                    });
+
+                    const response = await fetch(urlObj.toString());
+                    const data = await response.json();
+                    if (!data.success) throw new Error(data.error || '生成失敗');
+                    shortLink = data.shortLink;
+                }
+
+                prependConvertedResult(urlInput, shortLink, subIds.filter(Boolean));
+                showToast('短網址生成成功！', 'success');
+            } catch (err) {
+                showToast(`轉換失敗：${err.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        function prependConvertedResult(originUrl, shortLink, tags) {
+            const list = document.getElementById('convertedHistoryList');
+            if (list.querySelector('.italic')) {
+                list.innerHTML = '';
+            }
+
+            const tagsHtml = tags.length > 0
+                ? tags.map(t => `<span class="px-2 py-0.5 bg-cyan-950 text-cyan-300 border border-cyan-700/60 rounded text-[10px] font-mono">${t}</span>`).join(' ')
+                : `<span class="text-[10px] text-slate-500">無 SubID 標籤</span>`;
+
+            const card = document.createElement('div');
+            card.className = 'p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2';
+            card.innerHTML = `
+                <div class="flex flex-wrap items-center gap-1.5">${tagsHtml}</div>
+                <div class="text-[11px] text-slate-500 truncate" title="${originUrl}">原網址：${originUrl}</div>
+                <div class="flex items-center justify-between gap-2 pt-1">
+                    <span class="text-xs font-mono font-bold text-cyan-300 truncate">${shortLink}</span>
+                    <button onclick="copyStringToClipboard('${shortLink}', '短網址已複製！')" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-lg text-xs font-bold shrink-0 transition-colors">
+                        <i class="fa-regular fa-copy mr-1"></i>複製
+                    </button>
+                </div>
+            `;
+            list.prepend(card);
+        }
+
+        // ==========================================
+        // 相容 iFrame 的剪貼簿複製工具
+        // ==========================================
+        function copyStringToClipboard(text, successMsg = '已複製到剪貼簿') {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-9999px';
+            document.body.appendChild(textArea);
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMsg, 'success');
+            } catch (err) {
+                showToast('複製失敗，請手動選取複製', 'error');
+            }
+            document.body.removeChild(textArea);
         }
     </script>
 </body>
