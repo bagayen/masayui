@@ -20,42 +20,62 @@
         ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.2); border-radius: 9999px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(148, 163, 184, 0.4); }
         input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.8); cursor: pointer; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
 <body class="h-full text-slate-100 flex flex-col md:flex-row overflow-hidden bg-slate-950">
 
-    <aside class="w-full md:w-64 bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between shrink-0 z-20">
+    <aside class="w-full md:w-64 bg-slate-900/95 backdrop-blur-md border-b md:border-b-0 md:border-r border-slate-800 flex flex-col justify-between shrink-0 z-20">
         <div>
-            <div class="p-5 flex items-center justify-between border-b border-slate-800">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl shopee-gradient flex items-center justify-center text-white font-black text-xl shadow-lg shadow-purple-900/40">
+            <div class="px-3.5 py-2.5 md:p-5 flex items-center justify-between border-b border-slate-800/80">
+                <div class="flex items-center gap-2.5 md:gap-3">
+                    <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl shopee-gradient flex items-center justify-center text-white font-black text-base md:text-xl shadow-lg shadow-purple-900/40 shrink-0">
                         <i class="fa-solid fa-chart-line"></i>
                     </div>
                     <div>
-                        <h1 class="font-bold text-base leading-tight tracking-wide text-white">Shopee Power</h1>
-                        <p class="text-[11px] text-purple-400 font-medium">Affiliate Center v2.2</p>
+                        <h1 class="font-bold text-sm md:text-base leading-tight tracking-wide text-white">Shopee Power</h1>
+                        <p class="text-[10px] md:text-[11px] text-purple-400 font-medium">Affiliate Center v2.2</p>
                     </div>
+                </div>
+
+                <!-- 手機版精簡工具列 (測試模式開關 + 設定齒輪) -->
+                <div class="flex items-center gap-2 md:hidden">
+                    <label class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] text-slate-300 select-none">
+                        <span>測試</span>
+                        <input type="checkbox" id="demoModeToggleMobile" class="sr-only peer" checked onchange="toggleDemoMode(this)">
+                        <div class="relative w-7 h-4 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-600"></div>
+                    </label>
+                    <button onclick="openSettingsModal()" aria-label="設定 GAS API 網址" class="w-8 h-8 flex items-center justify-center bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-300 text-xs transition-colors">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
                 </div>
             </div>
 
-            <nav class="p-3 space-y-1 flex md:flex-col overflow-x-auto md:overflow-visible">
-                <button onclick="switchTab('analytics')" id="nav-analytics" class="tab-btn active w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-bold transition-all text-purple-400 bg-purple-500/10 border border-purple-500/20 whitespace-nowrap">
-                    <i class="fa-solid fa-chart-pie text-base"></i> 業績與訂單回報
+            <nav class="px-2.5 py-2 md:p-3 flex md:flex-col gap-1.5 md:gap-1 overflow-x-auto md:overflow-visible no-scrollbar">
+                <button onclick="switchTab('analytics')" id="nav-analytics" class="tab-btn active flex-1 md:flex-none md:w-full flex items-center justify-center md:justify-start gap-1.5 md:gap-3 px-2.5 py-2 md:px-4 md:py-3 rounded-xl text-xs font-bold transition-all text-purple-400 bg-purple-500/10 border border-purple-500/20 whitespace-nowrap">
+                    <i class="fa-solid fa-chart-pie text-sm md:text-base"></i>
+                    <span class="md:hidden">業績訂單</span>
+                    <span class="hidden md:inline">業績與訂單回報</span>
                 </button>
-                <button onclick="switchTab('highCommission')" id="nav-highCommission" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-fire text-base text-amber-500"></i> 高佣金爆款選品
+                <button onclick="switchTab('highCommission')" id="nav-highCommission" class="tab-btn flex-1 md:flex-none md:w-full flex items-center justify-center md:justify-start gap-1.5 md:gap-3 px-2.5 py-2 md:px-4 md:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
+                    <i class="fa-solid fa-fire text-sm md:text-base text-amber-500"></i>
+                    <span class="md:hidden">高佣選品</span>
+                    <span class="hidden md:inline">高佣金爆款選品</span>
                 </button>
-                <button onclick="switchTab('converter')" id="nav-converter" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all whitespace-nowrap">
-                    <i class="fa-solid fa-link text-base text-cyan-400"></i> SubID 渠道轉換器
+                <button onclick="switchTab('converter')" id="nav-converter" class="tab-btn flex-1 md:flex-none md:w-full flex items-center justify-center md:justify-start gap-1.5 md:gap-3 px-2.5 py-2 md:px-4 md:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
+                    <i class="fa-solid fa-link text-sm md:text-base text-cyan-400"></i>
+                    <span class="md:hidden">渠道轉換</span>
+                    <span class="hidden md:inline">SubID 渠道轉換器</span>
                 </button>
             </nav>
         </div>
 
-        <div class="p-4 border-t border-slate-800 bg-slate-900/50 space-y-3">
+        <div class="hidden md:block p-4 border-t border-slate-800 bg-slate-900/50 space-y-3">
             <div class="flex items-center justify-between text-xs text-slate-400">
                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-vial"></i> 模擬測試模式</span>
                 <label class="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" id="demoModeToggle" class="sr-only peer" checked onchange="toggleDemoMode()">
+                    <input type="checkbox" id="demoModeToggle" class="sr-only peer" checked onchange="toggleDemoMode(this)">
                     <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600"></div>
                 </label>
             </div>
@@ -65,41 +85,46 @@
         </div>
     </aside>
 
-    <main class="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
-
-        <div id="gasWarning" class="p-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between text-amber-300 text-xs hidden">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-triangle-exclamation text-amber-400"></i> 目前處於正式 API 模式，但尚未設定 GAS 網址！</span>
-            <button onclick="openSettingsModal()" class="underline font-bold hover:text-white">立即設定</button>
-        </div>
-
+    <main class="flex-1 min-h-0 overflow-y-auto p-3.5 sm:p-5 md:p-8 space-y-5 md:space-y-6">
         <!-- ================= TAB 1: 業績與訂單回報 ================= -->
-        <section id="tab-analytics" class="tab-content space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <section id="tab-analytics" class="tab-content space-y-5 md:space-y-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                    <h2 class="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-                        <i class="fa-solid fa-wallet text-purple-400"></i> 業績與訂單成效
+                    <h2 class="text-lg sm:text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie text-purple-400"></i> 業績與訂單轉換總覽
                     </h2>
-                    <p class="text-xs text-slate-400 mt-1">即時掌握分潤訂單狀態、預估佣金與推廣渠道來源</p>
+                    <p class="text-xs text-slate-400 mt-0.5">即時追蹤分潤訂單狀態、預估佣金與各渠道推廣成效</p>
                 </div>
             </div>
 
+            <!-- 未設定 GAS API 警告提示橫幅 -->
+            <div id="gasWarning" class="hidden p-3.5 bg-amber-500/10 border border-amber-500/30 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-200">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-400 text-base shrink-0"></i>
+                    <span>目前尚未設定真實的 <strong>GAS API 網址</strong>，關閉測試模式後將無法連線抓取資料。</span>
+                </div>
+                <button onclick="openSettingsModal()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl shrink-0 transition-colors">
+                    立即設定
+                </button>
+            </div>
+
             <!-- KPI Metric Cards -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="glass-card p-5 rounded-2xl space-y-2">
-                    <div class="flex justify-between text-slate-400 text-xs font-semibold"><span>預估總收益</span><i class="fa-solid fa-dollar-sign text-emerald-400"></i></div>
-                    <div class="text-3xl font-extrabold text-emerald-400" id="kpiEstCommission">$0</div>
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+                <div class="glass-card p-3.5 md:p-5 rounded-2xl space-y-1.5 md:space-y-2">
+                    <div class="flex justify-between text-slate-400 text-[11px] md:text-xs font-semibold"><span>預估總收益</span><i class="fa-solid fa-dollar-sign text-emerald-400"></i></div>
+                    <div class="text-xl sm:text-2xl md:text-3xl font-extrabold text-emerald-400 truncate" id="kpiEstCommission">$0</div>
                 </div>
-                <div class="glass-card p-5 rounded-2xl space-y-2">
-                    <div class="flex justify-between text-slate-400 text-xs font-semibold"><span>訂單總數</span><i class="fa-solid fa-bag-shopping text-purple-400"></i></div>
-                    <div class="text-3xl font-extrabold text-white" id="kpiTotalOrders">0</div>
+                <div class="glass-card p-3.5 md:p-5 rounded-2xl space-y-1.5 md:space-y-2">
+                    <div class="flex justify-between text-slate-400 text-[11px] md:text-xs font-semibold"><span>訂單總數</span><i class="fa-solid fa-bag-shopping text-purple-400"></i></div>
+                    <div class="text-xl sm:text-2xl md:text-3xl font-extrabold text-white" id="kpiTotalOrders">0</div>
                 </div>
-                <div class="glass-card p-5 rounded-2xl space-y-2">
-                    <div class="flex justify-between text-slate-400 text-xs font-semibold"><span>已付款/審核中</span><i class="fa-solid fa-clock-rotate-left text-amber-400"></i></div>
-                    <div class="text-3xl font-extrabold text-amber-400" id="kpiPendingOrders">0</div>
+                <div class="glass-card p-3.5 md:p-5 rounded-2xl space-y-1.5 md:space-y-2">
+                    <div class="flex justify-between text-slate-400 text-[11px] md:text-xs font-semibold"><span>已付款/審核中</span><i class="fa-solid fa-clock-rotate-left text-amber-400"></i></div>
+                    <div class="text-xl sm:text-2xl md:text-3xl font-extrabold text-amber-400" id="kpiPendingOrders">0</div>
                 </div>
-                <div class="glass-card p-5 rounded-2xl space-y-2">
-                    <div class="flex justify-between text-slate-400 text-xs font-semibold"><span>最高轉換 SubID</span><i class="fa-solid fa-tags text-cyan-400"></i></div>
-                    <div class="text-2xl font-bold text-cyan-300 truncate" id="kpiTopSubId">-</div>
+                <div class="glass-card p-3.5 md:p-5 rounded-2xl space-y-1.5 md:space-y-2">
+                    <div class="flex justify-between text-slate-400 text-[11px] md:text-xs font-semibold"><span>最高轉換 SubID</span><i class="fa-solid fa-tags text-cyan-400"></i></div>
+                    <div class="text-lg sm:text-xl md:text-2xl font-bold text-cyan-300 truncate" id="kpiTopSubId">-</div>
                 </div>
             </div>
 
@@ -269,46 +294,42 @@
         window.addEventListener('DOMContentLoaded', () => {
             if (document.getElementById('gasUrlInput')) document.getElementById('gasUrlInput').value = gasApiUrl;
             if (document.getElementById('demoModeToggle')) document.getElementById('demoModeToggle').checked = isDemoMode;
+            if (document.getElementById('demoModeToggleMobile')) document.getElementById('demoModeToggleMobile').checked = isDemoMode;
             
             const todayStr = new Date().toISOString().split('T')[0];
             document.getElementById('customStartDate').value = todayStr;
             document.getElementById('customEndDate').value = todayStr;
             toggleDemoMode();
         });
-
-        // ===============================================
-        // 控制下拉選單與日曆顯示
-        // ===============================================
-        function handleDateSelectChange() {
-            const val = document.getElementById('reportDaysSelect').value;
-            const customDateContainer = document.getElementById('customDateContainer');
-            
-            if (val === 'custom') {
-                customDateContainer.classList.remove('hidden');
-                customDateContainer.classList.add('flex');
-            } else {
-                customDateContainer.classList.remove('flex');
-                customDateContainer.classList.add('hidden');
-                // 取消自動觸發抓取資料，讓使用者統一按搜尋按鈕
-            }
-        }
-
+// ... existing code ... -->
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(el => {
-                el.classList.remove('active', 'text-purple-400', 'bg-purple-500/10', 'border', 'border-purple-500/20');
-                el.classList.add('text-slate-400');
+                el.classList.remove('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20');
+                el.classList.add('text-slate-400', 'border-transparent');
             });
             document.getElementById(`tab-${tabId}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-${tabId}`);
-            activeBtn.classList.add('active', 'text-purple-400', 'bg-purple-500/10', 'border', 'border-purple-500/20');
+            activeBtn.classList.remove('text-slate-400', 'border-transparent');
+            activeBtn.classList.add('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20');
         }
 
-        function toggleDemoMode() {
-            isDemoMode = document.getElementById('demoModeToggle').checked;
+        function toggleDemoMode(sourceEl) {
+            const desktopToggle = document.getElementById('demoModeToggle');
+            const mobileToggle = document.getElementById('demoModeToggleMobile');
+            if (sourceEl) {
+                isDemoMode = sourceEl.checked;
+            } else if (desktopToggle) {
+                isDemoMode = desktopToggle.checked;
+            }
+            if (desktopToggle) desktopToggle.checked = isDemoMode;
+            if (mobileToggle) mobileToggle.checked = isDemoMode;
+
             const gasWarn = document.getElementById('gasWarning');
-            if (!isDemoMode && (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址")) gasWarn.classList.remove('hidden');
-            else gasWarn.classList.add('hidden');
+            if (gasWarn) {
+                if (!isDemoMode && (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址")) gasWarn.classList.remove('hidden');
+                else gasWarn.classList.add('hidden');
+            }
         }
 
         function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
@@ -317,8 +338,25 @@
             gasApiUrl = document.getElementById('gasUrlInput').value.trim();
             localStorage.setItem('SHOPEE_GAS_URL', gasApiUrl);
             closeSettingsModal();
-            if (gasApiUrl && gasApiUrl !== "請在此填寫你的_GAS_網址") document.getElementById('demoModeToggle').checked = false;
+            if (gasApiUrl && gasApiUrl !== "請在此填寫你的_GAS_網址") {
+                if (document.getElementById('demoModeToggle')) document.getElementById('demoModeToggle').checked = false;
+                if (document.getElementById('demoModeToggleMobile')) document.getElementById('demoModeToggleMobile').checked = false;
+            }
             toggleDemoMode();
+        }
+
+        function handleDateSelectChange() {
+            const daysSelect = document.getElementById('reportDaysSelect');
+            const customContainer = document.getElementById('customDateContainer');
+            if (!daysSelect || !customContainer) return;
+
+            if (daysSelect.value === 'custom') {
+                customContainer.classList.remove('hidden');
+                customContainer.classList.add('flex');
+            } else {
+                customContainer.classList.add('hidden');
+                customContainer.classList.remove('flex');
+            }
         }
 
         // ===============================================
