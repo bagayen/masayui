@@ -607,9 +607,9 @@
                         {
                             orderSn: "261112C15X8W3E",
                             purchaseTime: nowSec - 86400 * 2.5,
-                            orderStatus: "COMPLETED",
+                            orderStatus: "UNPAID",
                             totalCommission: 85.40,
-                            subId1: "----",
+                            subId1: "fb_fanpage",
                             items: [
                                 { itemName: "多功能桌面磁吸無線充電座 支援三合一快充", itemPrice: 890, qty: 1, estimatedCommission: 85.40 }
                             ]
@@ -758,9 +758,23 @@
             const cleanSubId = subId.toString().trim();
             const lowerSubId = cleanSubId.toLowerCase();
             
-            if (lowerSubId.startsWith('ap')) {
+            // IG (粉紫色)
+            if (lowerSubId.includes('ig') || lowerSubId.includes('instagram')) {
+                return `<span class="px-2.5 py-1 bg-fuchsia-500/25 text-fuchsia-300 border border-fuchsia-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-instagram"></i>${cleanSubId}</span>`;
+            }
+            // FB (藍色)
+            if (lowerSubId.includes('fb') || lowerSubId.includes('facebook')) {
+                return `<span class="px-2.5 py-1 bg-blue-500/25 text-blue-300 border border-blue-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-facebook"></i>${cleanSubId}</span>`;
+            }
+            // LINE (綠色)
+            if (lowerSubId.includes('line')) {
+                return `<span class="px-2.5 py-1 bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-line"></i>${cleanSubId}</span>`;
+            }
+            // AP 轉換器 (高亮紫色 + 機器人圖示)
+            if (lowerSubId.includes('ap')) {
                 return `<span class="px-2.5 py-1 bg-purple-600/30 text-purple-200 border border-purple-400/60 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm shadow-purple-900/50"><i class="fa-solid fa-robot text-purple-300"></i>${cleanSubId}</span>`;
             }
+			// 預設樣式 (深青色)
             return `<span class="px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-700/60 rounded-lg text-[11px] font-mono inline-flex items-center gap-1"><i class="fa-solid fa-tag text-cyan-400"></i>${cleanSubId}</span>`;
         }
 
@@ -768,71 +782,72 @@
         // 訂單狀態徽章渲染
         // ==========================================
         function getStatusBadge(status) {
-            const s = (status || '').toUpperCase();
-            if (s === 'COMPLETED') {
-                return `<span class="px-2.5 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-circle-check text-[10px]"></i>已完成</span>`;
+            switch(status) {
+                case 'UNPAID': return `<span class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px]">未付款</span>`;
+                case 'PENDING': case 'PAID': return `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded text-[10px] font-bold">已付款</span>`;
+                case 'COMPLETED': return `<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[10px] font-bold">已完成結算</span>`;
+                case 'CANCELLED': return `<span class="px-2 py-0.5 bg-red-500/20 text-red-300 border border-red-500/30 rounded text-[10px] font-bold">已取消/退貨</span>`;
+                default: return `<span class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px]">${status}</span>`;
             }
-            if (s === 'CANCELLED') {
-                return `<span class="px-2.5 py-1 bg-red-500/15 text-red-400 border border-red-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-circle-xmark text-[10px]"></i>已取消</span>`;
-            }
-            return `<span class="px-2.5 py-1 bg-amber-500/15 text-amber-400 border border-amber-500/30 rounded-lg text-[11px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-clock text-[10px]"></i>審核中</span>`;
         }
 
         // ==========================================
         // 渲染訂單表格 (支援一筆訂單多商品垂直展開)
         // ==========================================
-        function renderOrderTable(orders) {
-            const tbody = document.getElementById('orderTableBody');
-            if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">查無符合條件的訂單資料</td></tr>`;
+        function renderOrderTable() {
+            const tableBody = document.getElementById('orderTableBody');
+            tableBody.innerHTML = '';
+            
+            if (currentOrdersData.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">此區間或搜尋條件下尚無分潤訂單紀錄</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = orders.map((order, idx) => {
-                const dateObj = new Date((order.purchaseTime || 0) * 1000);
-                const formattedTime = dateObj.toLocaleString('zh-TW', {
-                    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', hour12: false
-                });
-
+            // 新增 index 變數用來產生序號 (No.)，並支援同一筆訂單多商品垂直堆疊顯示
+            currentOrdersData.forEach((order, index) => {
                 const items = (order.items && order.items.length > 0)
                     ? order.items
-                    : [{ itemName: '蝦皮商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
-
+                    : [{ itemName: '未知商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
                 const isMulti = items.length > 1;
+                const dateStr = new Date(order.purchaseTime * 1000).toLocaleString('zh-TW', { hour12: false });
+                const totalComm = parseFloat(order.totalCommission || 0).toFixed(2);
 
-                const namesHtml = items.map(it => `
-                    <div class="leading-snug py-0.5 ${isMulti ? 'border-b border-slate-800/70 last:border-b-0' : ''}" title="${it.itemName}">
-                        ${it.itemName}
+                // 商品名稱多行堆疊
+                const namesHtml = items.map((it, idx) => `
+                    <div class="truncate ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}" title="${it.itemName}">
+                        ${isMulti ? `<span class="text-[10px] text-purple-400 font-mono mr-1">${idx + 1}.</span>` : ''}${it.itemName}
                     </div>
-                `).join('') + (isMulti ? `<div class="text-[10px] text-purple-400 font-semibold pt-1">共 ${items.length} 項商品</div>` : '');
+                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400 font-semibold">共 ${items.length} 項商品</div>` : '');
 
-                const qtyPriceHtml = items.map(it => `
-                    <div class="font-mono text-slate-400 py-0.5 ${isMulti ? 'border-b border-slate-800/70 last:border-b-0' : ''}">
-                        x${it.qty || 1} <span class="text-slate-600">/</span> $${Number(it.itemPrice || 0).toLocaleString()}
+                // 數量與單價多行堆疊 (與左側商品行高對齊)
+                const qtyPriceHtml = items.map((it, idx) => `
+                    <div class="${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
+                        ${it.qty} x $${parseFloat(it.itemPrice || 0).toLocaleString()}
                     </div>
-                `).join('') + (isMulti ? `<div class="text-[10px] text-transparent select-none pt-1">-</div>` : '');
+                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400">訂單合計</div>` : '');
 
-                const commHtml = items.map(it => `
-                    <div class="font-mono font-semibold text-emerald-400/90 py-0.5 ${isMulti ? 'border-b border-slate-800/70 last:border-b-0' : ''}">
-                        +$${parseFloat(it.estimatedCommission || 0).toFixed(2)}
-                    </div>
-                `).join('') + (isMulti ? `<div class="text-[11px] font-mono font-extrabold text-emerald-300 pt-1">總計 +$${parseFloat(order.totalCommission || 0).toFixed(2)}</div>` : '');
-
-                return `
-                    <tr class="hover:bg-slate-800/35 transition-colors">
-                        <td class="p-3 text-center text-slate-500 font-mono align-top">${idx + 1}</td>
-                        <td class="p-3 align-top whitespace-nowrap">
-                            <div class="font-mono font-bold text-slate-200">${order.orderSn}</div>
-                            <div class="text-[11px] text-slate-500 mt-0.5">${formattedTime}</div>
-                        </td>
-                        <td class="p-3 align-top max-w-xs">${namesHtml}</td>
-                        <td class="p-3 align-top whitespace-nowrap">${qtyPriceHtml}</td>
-                        <td class="p-3 align-top whitespace-nowrap">${commHtml}</td>
-                        <td class="p-3 align-top whitespace-nowrap">${getStatusBadge(order.orderStatus)}</td>
-                        <td class="p-3 align-top whitespace-nowrap">${getSubIdBadge(order.subId1)}</td>
+                // 預估佣金多行堆疊 + 多商品時底部顯示總佣金
+                const commHtml = items.map((it, idx) => {
+                    const c = parseFloat(it.estimatedCommission || 0).toFixed(2);
+                    return `
+                        <div class="${isMulti ? 'text-slate-300 font-normal' : 'font-bold text-emerald-400'} ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
+                            +$${c}
+                        </div>
+                    `;
+                }).join('') + (isMulti ? `<div class="pt-1 font-bold text-emerald-400 border-t border-slate-700/80">+$${totalComm}</div>` : '');
+                
+                tableBody.insertAdjacentHTML('beforeend', `
+                    <tr class="hover:bg-slate-800/40 transition-colors align-top">
+                        <td class="p-3 text-center text-slate-500 font-mono text-[10px] bg-slate-800/20">${index + 1}</td>
+                        <td class="p-3 font-mono whitespace-nowrap"><div class="text-white font-bold">${order.orderSn}</div><div class="text-[10px] text-slate-500">${dateStr}</div></td>
+                        <td class="p-3 max-w-[240px] space-y-1.5">${namesHtml}</td>
+                        <td class="p-3 font-mono whitespace-nowrap space-y-1.5">${qtyPriceHtml}</td>
+                        <td class="p-3 font-mono whitespace-nowrap space-y-1.5">${commHtml}</td>
+                        <td class="p-3 whitespace-nowrap">${getStatusBadge(order.orderStatus)}</td>
+                        <td class="p-3 whitespace-nowrap">${getSubIdBadge(order.subId1)}</td>
                     </tr>
-                `;
-            }).join('');
+                `);
+            });
         }
 
         // ==========================================
