@@ -781,15 +781,72 @@
         // ==========================================
         // 訂單狀態徽章渲染
         // ==========================================
-        function getStatusBadge(status) {
-            switch(status) {
-                case 'UNPAID': return `<span class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px]">未付款</span>`;
-                case 'PENDING': case 'PAID': return `<span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded text-[10px] font-bold">已付款</span>`;
-                case 'COMPLETED': return `<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded text-[10px] font-bold">已完成結算</span>`;
-                case 'CANCELLED': return `<span class="px-2 py-0.5 bg-red-500/20 text-red-300 border border-red-500/30 rounded text-[10px] font-bold">已取消/退貨</span>`;
-                default: return `<span class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px]">${status}</span>`;
-            }
+		function escapeHtml(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
         }
+		
+        const STATUS_CONFIG = {
+			UNPAID: {
+				label: '未付款',
+				badgeClass: 'bg-slate-800/90 text-slate-400 border-slate-700/80',
+				dotClass: 'bg-slate-500',
+				pulse: false,
+			},
+		PAID: {
+			label: '已付款',
+				badgeClass: 'bg-sky-500/10 text-sky-300 border-sky-500/30 shadow-[0_0_10px_rgba(14,165,233,0.12)]',
+				dotClass: 'bg-sky-400',
+				pulse: true, 
+			},
+		PENDING: {
+			label: '審核中',
+				badgeClass: 'bg-amber-500/10 text-amber-300 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.12)]',
+				dotClass: 'bg-amber-400',
+				pulse: false,
+			},
+		COMPLETED: {
+			label: '已完成結算',
+				badgeClass: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.12)]',
+				dotClass: 'bg-emerald-400',
+				pulse: false,
+			},
+		CANCELLED: {
+			label: '已取消/退貨',
+				badgeClass: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
+				dotClass: 'bg-rose-400',
+				pulse: true,
+			}
+		};
+
+		function getStatusBadge(status) {
+			// 統一轉大寫防呆，避免 API 偶爾回傳小寫 pending / paid
+			const normalizedStatus = String(status ?? '').toUpperCase();
+			const cfg = STATUS_CONFIG[normalizedStatus] || {
+				label: escapeHtml(status || '未知狀態'),
+				badgeClass: 'bg-slate-800 text-slate-400 border-slate-700',
+				dotClass: 'bg-slate-500',
+				pulse: false,
+			};
+
+			const dotHtml = cfg.pulse
+				? `<span class="relative flex h-1.5 w-1.5 shrink-0">
+					<span class="animate-ping absolute inline-flex h-full w-full rounded-full ${cfg.dotClass} opacity-75"></span>
+					<span class="relative inline-flex rounded-full h-1.5 w-1.5 ${cfg.dotClass}"></span>
+				  </span>`
+				: `<span class="h-1.5 w-1.5 shrink-0 rounded-full ${cfg.dotClass}"></span>`;
+
+			return `
+				<span title="${cfg.tip}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border tracking-wide ${cfg.badgeClass}">
+					${dotHtml}
+					<span class="leading-none">${cfg.label}</span>
+				</span>
+			`;
+		}
 
         // ==========================================
         // 渲染訂單表格 (支援一筆訂單多商品垂直展開)
