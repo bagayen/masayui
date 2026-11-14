@@ -607,9 +607,9 @@
                         {
                             orderSn: "261112C15X8W3E",
                             purchaseTime: nowSec - 86400 * 2.5,
-                            orderStatus: "UNPAID",
+                            orderStatus: "COMPLETED",
                             totalCommission: 85.40,
-                            subId1: "fb_fanpage",
+                            subId1: "----",
                             items: [
                                 { itemName: "多功能桌面磁吸無線充電座 支援三合一快充", itemPrice: 890, qty: 1, estimatedCommission: 85.40 }
                             ]
@@ -721,7 +721,8 @@
                 }
             });
 
-            const sorted = [...currentOrdersData].sort((a, b) => {
+            // 直接對 currentOrdersData 進行原地排序，確保表格渲染與匯出 CSV 皆套用最新順序
+            currentOrdersData.sort((a, b) => {
                 let valA, valB;
                 if (column === 'time') {
                     valA = a.purchaseTime || 0;
@@ -745,11 +746,11 @@
                 return 0;
             });
 
-            renderOrderTable(sorted);
+            renderOrderTable(currentOrdersData);
         }
 
         // ==========================================
-        // SubID 標籤徽章渲染 (寬鬆認定 AP 開頭)
+        // SubID 標籤徽章渲染 (寬鬆認定渠道與 AP 標籤)
         // ==========================================
         function getSubIdBadge(subId) {
             if (!subId || subId.toString().trim() === '無' || subId.toString().trim() === 'null' || subId.toString().trim() === '') {
@@ -774,7 +775,7 @@
             if (lowerSubId.includes('ap')) {
                 return `<span class="px-2.5 py-1 bg-purple-600/30 text-purple-200 border border-purple-400/60 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm shadow-purple-900/50"><i class="fa-solid fa-robot text-purple-300"></i>${cleanSubId}</span>`;
             }
-			// 預設樣式 (深青色)
+            // 預設樣式 (深青色)
             return `<span class="px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-700/60 rounded-lg text-[11px] font-mono inline-flex items-center gap-1"><i class="fa-solid fa-tag text-cyan-400"></i>${cleanSubId}</span>`;
         }
 
@@ -794,17 +795,18 @@
         // ==========================================
         // 渲染訂單表格 (支援一筆訂單多商品垂直展開)
         // ==========================================
-        function renderOrderTable() {
+        function renderOrderTable(orders = currentOrdersData) {
             const tableBody = document.getElementById('orderTableBody');
+            if (!tableBody) return;
             tableBody.innerHTML = '';
             
-            if (currentOrdersData.length === 0) {
+            if (!orders || orders.length === 0) {
                 tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">此區間或搜尋條件下尚無分潤訂單紀錄</td></tr>`;
                 return;
             }
 
-            // 新增 index 變數用來產生序號 (No.)，並支援同一筆訂單多商品垂直堆疊顯示
-            currentOrdersData.forEach((order, index) => {
+            // 產生序號 (No.)，並支援同一筆訂單多商品垂直堆疊顯示
+            orders.forEach((order, index) => {
                 const items = (order.items && order.items.length > 0)
                     ? order.items
                     : [{ itemName: '未知商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
