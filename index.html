@@ -480,8 +480,8 @@
 
             setTimeout(() => {
                 toast.classList.add('translate-y-2', 'opacity-0');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
         }
 
         // ==========================================
@@ -797,26 +797,26 @@
 				dotClass: 'bg-slate-500',
 				pulse: false,
 			},
-		PAID: {
-			label: '已付款',
+			PAID: {
+				label: '已付款',
 				badgeClass: 'bg-sky-500/10 text-sky-300 border-sky-500/30 shadow-[0_0_10px_rgba(14,165,233,0.12)]',
 				dotClass: 'bg-sky-400',
 				pulse: true, 
 			},
-		PENDING: {
-			label: '審核中',
+			PENDING: {
+				label: '審核中',
 				badgeClass: 'bg-amber-500/10 text-amber-300 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.12)]',
 				dotClass: 'bg-amber-400',
 				pulse: false,
 			},
-		COMPLETED: {
-			label: '已完成結算',
+			COMPLETED: {
+				label: '已完成',
 				badgeClass: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.12)]',
 				dotClass: 'bg-emerald-400',
 				pulse: false,
 			},
-		CANCELLED: {
-			label: '已取消/退貨',
+			CANCELLED: {
+				label: '已取消',
 				badgeClass: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
 				dotClass: 'bg-rose-400',
 				pulse: true,
