@@ -43,11 +43,6 @@
                     </div>
                 </div>
 
-                <!-- 電腦版收合按鈕 (>= lg) -->
-                <button onclick="toggleSidebar()" id="desktopCollapseBtn" title="收合 / 展開側邊欄" aria-label="收合或展開側邊欄" class="hidden lg:flex w-7 h-7 items-center justify-center bg-slate-800/80 hover:bg-slate-700 border border-slate-700/80 rounded-lg text-slate-400 hover:text-white text-xs transition-colors shrink-0">
-                    <i id="desktopCollapseIcon" class="fa-solid fa-angles-left"></i>
-                </button>
-
                 <!-- 手機版精簡工具列 (< md) -->
                 <div class="flex items-center gap-1.5 md:hidden">
                     <label title="切換模擬測試模式" class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] text-slate-300 select-none">
@@ -99,8 +94,8 @@
         </div>
 
         <!-- 電腦版側邊欄底部工具區 (>= lg) -->
-        <div id="sidebarFooter" class="hidden lg:block p-4 border-t border-slate-800 bg-slate-900/50 space-y-3 transition-all">
-            <div id="sidebarDemoRow" class="flex items-center justify-between text-xs text-slate-400">
+        <div id="sidebarFooter" class="hidden lg:block p-4 border-t border-slate-800 bg-slate-900/50 space-y-2.5 transition-all">
+            <div id="sidebarDemoRow" class="flex items-center justify-between text-xs text-slate-400 pb-0.5">
                 <span class="sidebar-text flex items-center gap-1.5"><i class="fa-solid fa-vial"></i> 模擬測試模式</span>
                 <label title="切換模擬測試模式" class="relative inline-flex items-center cursor-pointer shrink-0">
                     <input type="checkbox" id="demoModeToggle" class="sr-only peer" checked onchange="toggleDemoMode(this)">
@@ -110,6 +105,10 @@
             <button onclick="openSettingsModal()" id="sidebarSettingsBtn" title="設定 GAS API 網址" class="w-full flex items-center justify-center py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-xs text-slate-300 font-medium transition-colors">
                 <i class="fa-solid fa-gear text-slate-400"></i>
                 <span class="sidebar-text ml-1.5">設定 GAS API 網址</span>
+            </button>
+            <button onclick="toggleSidebar()" id="desktopCollapseBtn" title="收合 / 展開側邊欄" aria-label="收合或展開側邊欄" class="w-full flex items-center justify-center py-2 bg-slate-800/50 hover:bg-slate-700/80 border border-slate-700/60 rounded-xl text-xs text-slate-400 hover:text-white font-medium transition-colors">
+                <i id="desktopCollapseIcon" class="fa-solid fa-angles-left"></i>
+                <span class="sidebar-text ml-1.5">收合側邊欄</span>
             </button>
         </div>
     </aside>
@@ -480,7 +479,7 @@
                 sidebar.classList.add('lg:w-20');
                 if (sidebarHeader) {
                     sidebarHeader.classList.remove('lg:p-5');
-                    sidebarHeader.classList.add('lg:px-2', 'lg:py-4', 'lg:flex-col', 'lg:gap-3');
+                    sidebarHeader.classList.add('lg:px-2', 'lg:py-4', 'lg:justify-center');
                 }
                 if (sidebarFooter) {
                     sidebarFooter.classList.remove('p-4');
@@ -502,7 +501,7 @@
                 sidebar.classList.remove('lg:w-20');
                 if (sidebarHeader) {
                     sidebarHeader.classList.add('lg:p-5');
-                    sidebarHeader.classList.remove('lg:px-2', 'lg:py-4', 'lg:flex-col', 'lg:gap-3');
+                    sidebarHeader.classList.remove('lg:px-2', 'lg:py-4', 'lg:justify-center');
                 }
                 if (sidebarFooter) {
                     sidebarFooter.classList.remove('lg:px-2', 'lg:py-3');
@@ -903,12 +902,15 @@
         function renderOrdersTable(orders) {
             const tbody = document.getElementById('orderTableBody');
             if (!orders || orders.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">查無符合條件的訂單紀錄</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">此區間或搜尋條件下尚無分潤訂單紀錄</td></tr>`;
                 return;
             }
 
-            tbody.innerHTML = orders.map((order, idx) => {
-                const items = (order.items && order.items.length > 0) ? order.items : [{ itemName: '蝦皮商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
+            // 產生序號 (No.)，並支援同一筆訂單多商品垂直堆疊顯示
+            tbody.innerHTML = orders.map((order, index) => {
+                const items = (order.items && order.items.length > 0)
+                    ? order.items
+                    : [{ itemName: '未知商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
                 const isMulti = items.length > 1;
                 const dateStr = new Date(order.purchaseTime * 1000).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
                 const totalComm = parseFloat(order.totalCommission || 0).toFixed(2);
@@ -920,35 +922,49 @@
                     pulse: false
                 };
 
-                const itemsHtml = items.map(it => `
-                    <div class="truncate max-w-xs sm:max-w-sm" title="${escapeHtml(it.itemName)}">
-                        ${isMulti ? '<span class="text-purple-400 mr-1">•</span>' : ''}${escapeHtml(it.itemName)}
+                // 商品名稱多行堆疊
+                const namesHtml = items.map((it, idx) => `
+                    <div class="truncate max-w-xs sm:max-w-sm ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}" title="${escapeHtml(it.itemName)}">
+                        ${isMulti ? `<span class="text-[10px] text-purple-400 font-mono mr-1">${idx + 1}.</span>` : ''}${escapeHtml(it.itemName)}
                     </div>
-                `).join('');
+                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400 font-semibold">共 ${items.length} 項商品</div>` : '');
 
-                const qtyPriceHtml = items.map(it => `
-                    <div class="text-slate-300 whitespace-nowrap">${it.qty || 1} 件 × $${Number(it.itemPrice || 0).toLocaleString()}</div>
-                `).join('');
+                // 數量與單價多行堆疊 (與左側商品行高對齊)
+                const qtyPriceHtml = items.map((it, idx) => `
+                    <div class="whitespace-nowrap ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
+                        ${it.qty || 1} x $${parseFloat(it.itemPrice || 0).toLocaleString()}
+                    </div>
+                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400">訂單合計</div>` : '');
+
+                // 預估佣金多行堆疊 + 多商品時底部顯示總佣金
+                const commHtml = items.map((it, idx) => {
+                    const c = parseFloat(it.estimatedCommission || 0).toFixed(2);
+                    return `
+                        <div class="${isMulti ? 'text-slate-300 font-normal' : 'font-bold text-emerald-400'} ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
+                            +$${c}
+                        </div>
+                    `;
+                }).join('') + (isMulti ? `<div class="pt-1 font-bold text-emerald-400 border-t border-slate-700/80">+$${totalComm}</div>` : '');
 
                 const subIdBadge = getSubIdBadge(order.subId1);
 
                 return `
                     <tr class="hover:bg-slate-800/40 transition-colors">
-                        <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
-                        <td class="p-3 whitespace-nowrap">
+                        <td class="p-3 align-top text-center text-slate-500 font-mono">${index + 1}</td>
+                        <td class="p-3 align-top whitespace-nowrap">
                             <div class="font-mono font-bold text-slate-200">${escapeHtml(order.orderSn)}</div>
                             <div class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(dateStr)}</div>
                         </td>
-                        <td class="p-3 space-y-1">${itemsHtml}</td>
-                        <td class="p-3 space-y-1 text-[11px]">${qtyPriceHtml}</td>
-                        <td class="p-3 whitespace-nowrap font-bold text-emerald-400">$${totalComm}</td>
-                        <td class="p-3 whitespace-nowrap">
+                        <td class="p-3 align-top space-y-1.5">${namesHtml}</td>
+                        <td class="p-3 align-top space-y-1.5 text-[11px] text-slate-300">${qtyPriceHtml}</td>
+                        <td class="p-3 align-top space-y-1.5 whitespace-nowrap">${commHtml}</td>
+                        <td class="p-3 align-top whitespace-nowrap">
                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${statusInfo.badgeClass}">
                                 <span class="w-1.5 h-1.5 rounded-full ${statusInfo.dotClass} ${statusInfo.pulse ? 'animate-pulse' : ''}"></span>
                                 ${escapeHtml(statusInfo.label)}
                             </span>
                         </td>
-                        <td class="p-3 whitespace-nowrap">${subIdBadge}</td>
+                        <td class="p-3 align-top whitespace-nowrap">${subIdBadge}</td>
                     </tr>
                 `;
             }).join('');
