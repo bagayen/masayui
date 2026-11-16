@@ -50,7 +50,7 @@
 
                 <!-- 手機版精簡工具列 (< md) -->
                 <div class="flex items-center gap-1.5 md:hidden">
-                    <label class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] text-slate-300 select-none">
+                    <label title="切換模擬測試模式" class="flex items-center gap-1.5 bg-slate-800/90 border border-slate-700/80 px-2.5 py-1.5 rounded-xl cursor-pointer text-[11px] text-slate-300 select-none">
                         <input type="checkbox" id="demoModeToggleMobile" class="sr-only peer" checked onchange="toggleDemoMode(this)">
                         <div class="relative w-7 h-4 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-purple-600"></div>
                     </label>
@@ -159,7 +159,7 @@
                     <div class="flex flex-wrap items-center gap-2 w-full xl:w-auto">
                         <!-- 時間區間選擇器 -->
                         <select id="reportDaysSelect" onchange="handleDateSelectChange()" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-purple-500">
-                            <option value="yesterday"selected>昨日</option>
+                            <option value="yesterday" selected>昨日</option>
                             <option value="lastWeek">上一週</option>
                             <option value="lastMonth">上個月</option>
                             <option value="3">近 3 天</option>
@@ -278,7 +278,10 @@
                 <!-- Result Panel -->
                 <div class="glass-card p-5 rounded-2xl flex flex-col justify-between">
                     <div class="space-y-4">
-                        <h3 class="text-sm font-bold text-white border-b border-slate-800 pb-3">產生結果歷史紀錄</h3>
+                        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                            <h3 class="text-sm font-bold text-white">產生結果歷史紀錄</h3>
+                            <button onclick="clearConvertHistory()" class="text-[11px] text-slate-400 hover:text-rose-400 transition-colors">清除紀錄</button>
+                        </div>
                         <div id="convertedHistoryList" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
                             <div class="p-8 text-center text-slate-500 text-xs italic">請在左側輸入網址並點擊生成...</div>
                         </div>
@@ -296,7 +299,10 @@
                 <h3 class="font-bold text-base text-white">設定 Google Apps Script URL</h3>
                 <button onclick="closeSettingsModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500">
+            <div class="space-y-2">
+                <label class="text-xs text-slate-400 block">請貼上部署為網頁應用程式的 GAS 執行網址：</label>
+                <input type="text" id="gasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-purple-500">
+            </div>
             <div class="flex justify-end gap-2 pt-2">
                 <button onclick="closeSettingsModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-xs text-slate-300">取消</button>
                 <button onclick="saveGasSettings()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 font-bold rounded-xl text-xs text-white">儲存設定</button>
@@ -316,6 +322,40 @@
         let sortState = { column: 'time', asc: false };
         let isSidebarCollapsed = localStorage.getItem('SHOPEE_NAV_COLLAPSED') === 'true';
 
+        // 訂單狀態徽章樣式與動態呼吸燈設定
+        const STATUS_CONFIG = {
+            'PAID': {
+                label: '已付款',
+                badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+                dotClass: 'bg-blue-400',
+                pulse: true
+            },
+            'PENDING': {
+                label: '審核中',
+                badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
+                dotClass: 'bg-amber-400',
+                pulse: false
+            },
+            'COMPLETED': {
+                label: '已完成',
+                badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+                dotClass: 'bg-emerald-400',
+                pulse: false
+            },
+            'CANCELLED': {
+                label: '已取消',
+                badgeClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30',
+                dotClass: 'bg-rose-400',
+                pulse: false
+            },
+            'UNPAID': {
+                label: '未付款',
+                badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
+                dotClass: 'bg-slate-400',
+                pulse: false
+            }
+        };
+
         // ==========================================
         // 初始化設定
         // ==========================================
@@ -327,19 +367,94 @@
             
             applySidebarState();
 
-            const todayStr = new Date().toISOString().split('T')[0];
+            const todayStr = getTaiwanDateString();
             document.getElementById('customStartDate').value = todayStr;
             document.getElementById('customEndDate').value = todayStr;
-            toggleDemoMode();
 
-            // 若預設為測試模式，自動載入模擬數據讓畫面有資料可看
+            toggleDemoMode();
+            renderConvertHistory();
+
+            // 若處於測試模式，自動載入昨日範例數據讓畫面立即可視化
             if (isDemoMode) {
                 fetchConversionReport();
             }
         });
 
         // ==========================================
-        // 導覽列收合 / 展開控制 (支援手機、平板與桌機)
+        // 安全防護與通用工具函式
+        // ==========================================
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+
+            const colors = {
+                success: 'bg-emerald-950/90 border-emerald-500/50 text-emerald-200',
+                error: 'bg-rose-950/90 border-rose-500/50 text-rose-200',
+                warning: 'bg-amber-950/90 border-amber-500/50 text-amber-200',
+                info: 'bg-slate-900/95 border-purple-500/50 text-slate-200'
+            };
+
+            const icons = {
+                success: '<i class="fa-solid fa-circle-check text-emerald-400"></i>',
+                error: '<i class="fa-solid fa-circle-exclamation text-rose-400"></i>',
+                warning: '<i class="fa-solid fa-triangle-exclamation text-amber-400"></i>',
+                info: '<i class="fa-solid fa-circle-info text-purple-400"></i>'
+            };
+
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-xl border shadow-2xl backdrop-blur-md text-xs font-medium transition-all duration-300 transform translate-y-2 opacity-0 ${colors[type] || colors.info}`;
+            toast.innerHTML = `${icons[type] || icons.info}<span>${escapeHtml(message)}</span>`;
+            container.appendChild(toast);
+
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            });
+
+            // 顯示 3.5 秒後淡出移除
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function copyTextToClipboard(text, successMsg = '已複製到剪貼簿') {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => showToast(successMsg, 'success'))
+                    .catch(() => fallbackCopyText(text, successMsg));
+            } else {
+                fallbackCopyText(text, successMsg);
+            }
+        }
+
+        function fallbackCopyText(text, successMsg) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMsg, 'success');
+            } catch (err) {
+                showToast('複製失敗，請手動選取複製', 'error');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // ==========================================
+        // 側邊欄與分頁導覽控制
         // ==========================================
         function toggleSidebar() {
             isSidebarCollapsed = !isSidebarCollapsed;
@@ -349,94 +464,78 @@
 
         function applySidebarState() {
             const sidebar = document.getElementById('mainSidebar');
-            const header = document.getElementById('sidebarHeader');
+            const sidebarHeader = document.getElementById('sidebarHeader');
+            const sidebarFooter = document.getElementById('sidebarFooter');
             const nav = document.getElementById('mainNav');
-            const footer = document.getElementById('sidebarFooter');
-            const demoRow = document.getElementById('sidebarDemoRow');
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const sidebarTexts = document.querySelectorAll('.sidebar-text');
             const desktopIcon = document.getElementById('desktopCollapseIcon');
             const mobileIcon = document.getElementById('mobileCollapseIcon');
             const tabletIcon = document.getElementById('tabletCollapseIcon');
             const collapsedBadge = document.getElementById('collapsedTabBadge');
+            const sidebarDemoRow = document.getElementById('sidebarDemoRow');
 
             if (isSidebarCollapsed) {
-                // 桌機版：縮窄為 76px 純圖示迷你側邊欄
                 sidebar.classList.remove('lg:w-56', 'xl:w-60');
-                sidebar.classList.add('lg:w-[76px]');
-                header.classList.remove('lg:p-5');
-                header.classList.add('lg:p-3', 'lg:flex-col', 'lg:gap-2.5');
-
-                // 手機 & 平板版：隱藏導覽選單列，只留單行極簡頂欄；桌機維持顯示圖示
-                nav.classList.remove('flex');
-                nav.classList.add('hidden', 'lg:flex');
-
-                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.add('lg:hidden'));
-                document.querySelectorAll('.tab-btn').forEach(btn => {
+                sidebar.classList.add('lg:w-20');
+                if (sidebarHeader) {
+                    sidebarHeader.classList.remove('lg:p-5');
+                    sidebarHeader.classList.add('lg:px-2', 'lg:py-4', 'lg:flex-col', 'lg:gap-3');
+                }
+                if (sidebarFooter) {
+                    sidebarFooter.classList.remove('p-4');
+                    sidebarFooter.classList.add('p-4', 'lg:px-2', 'lg:py-3');
+                }
+                tabBtns.forEach(btn => {
                     btn.classList.remove('lg:justify-start', 'lg:px-4');
                     btn.classList.add('lg:justify-center', 'lg:px-0');
                 });
-
-                if (footer) {
-                    footer.classList.remove('p-4');
-                    footer.classList.add('p-2.5');
-                }
-                if (demoRow) {
-                    demoRow.classList.remove('justify-between');
-                    demoRow.classList.add('justify-center');
-                }
-                if (collapsedBadge) collapsedBadge.classList.remove('hidden');
-
+                sidebarTexts.forEach(el => el.classList.add('lg:hidden'));
                 if (desktopIcon) desktopIcon.className = 'fa-solid fa-angles-right';
                 if (mobileIcon) mobileIcon.className = 'fa-solid fa-chevron-down';
                 if (tabletIcon) tabletIcon.className = 'fa-solid fa-chevron-down';
+                if (collapsedBadge) collapsedBadge.classList.remove('hidden');
+                if (sidebarDemoRow) sidebarDemoRow.classList.add('lg:justify-center');
+                nav.classList.add('hidden', 'lg:flex');
             } else {
-                // 展開還原完整導覽列
-                sidebar.classList.remove('lg:w-[76px]');
                 sidebar.classList.add('lg:w-56', 'xl:w-60');
-                header.classList.remove('lg:p-3', 'lg:flex-col', 'lg:gap-2.5');
-                header.classList.add('lg:p-5');
-
-                nav.classList.remove('hidden');
-                nav.classList.add('flex');
-
-                document.querySelectorAll('.sidebar-text').forEach(el => el.classList.remove('lg:hidden'));
-                document.querySelectorAll('.tab-btn').forEach(btn => {
-                    btn.classList.remove('lg:justify-center', 'lg:px-0');
+                sidebar.classList.remove('lg:w-20');
+                if (sidebarHeader) {
+                    sidebarHeader.classList.add('lg:p-5');
+                    sidebarHeader.classList.remove('lg:px-2', 'lg:py-4', 'lg:flex-col', 'lg:gap-3');
+                }
+                if (sidebarFooter) {
+                    sidebarFooter.classList.remove('lg:px-2', 'lg:py-3');
+                    sidebarFooter.classList.add('p-4');
+                }
+                tabBtns.forEach(btn => {
                     btn.classList.add('lg:justify-start', 'lg:px-4');
+                    btn.classList.remove('lg:justify-center', 'lg:px-0');
                 });
-
-                if (footer) {
-                    footer.classList.remove('p-2.5');
-                    footer.classList.add('p-4');
-                }
-                if (demoRow) {
-                    demoRow.classList.remove('justify-center');
-                    demoRow.classList.add('justify-between');
-                }
-                if (collapsedBadge) collapsedBadge.classList.add('hidden');
-
+                sidebarTexts.forEach(el => el.classList.remove('lg:hidden'));
                 if (desktopIcon) desktopIcon.className = 'fa-solid fa-angles-left';
                 if (mobileIcon) mobileIcon.className = 'fa-solid fa-chevron-up';
                 if (tabletIcon) tabletIcon.className = 'fa-solid fa-chevron-up';
+                if (collapsedBadge) collapsedBadge.classList.add('hidden');
+                if (sidebarDemoRow) sidebarDemoRow.classList.remove('lg:justify-center');
+                nav.classList.remove('hidden');
             }
         }
 
-        // ==========================================
-        // 頁籤切換邏輯
-        // ==========================================
         function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-            const targetSection = document.getElementById('tab-' + tabId);
-            if (targetSection) targetSection.classList.remove('hidden');
+            document.querySelectorAll('.tab-content').forEach(sec => sec.classList.add('hidden'));
+            const targetSec = document.getElementById(`tab-${tabId}`);
+            if (targetSec) targetSec.classList.remove('hidden');
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20', 'font-bold');
-                btn.classList.add('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60', 'border-transparent', 'font-semibold');
+                btn.classList.add('text-slate-400', 'border-transparent', 'font-semibold');
             });
 
-            const activeBtn = document.getElementById('nav-' + tabId);
+            const activeBtn = document.getElementById(`nav-${tabId}`);
             if (activeBtn) {
-                activeBtn.classList.remove('text-slate-400', 'hover:text-white', 'hover:bg-slate-800/60', 'border-transparent', 'font-semibold');
                 activeBtn.classList.add('active', 'text-purple-400', 'bg-purple-500/10', 'border-purple-500/20', 'font-bold');
+                activeBtn.classList.remove('text-slate-400', 'border-transparent', 'font-semibold');
             }
 
             const tabNames = {
@@ -444,87 +543,94 @@
                 highCommission: '高佣選品',
                 converter: '渠道轉換'
             };
-            const collapsedBadge = document.getElementById('collapsedTabBadge');
-            if (collapsedBadge && tabNames[tabId]) {
-                collapsedBadge.innerText = tabNames[tabId];
-            }
+            const badge = document.getElementById('collapsedTabBadge');
+            if (badge) badge.innerText = tabNames[tabId] || '業績訂單';
         }
 
-        // ==========================================
-        // 自訂通知提示框 (無阻塞 Toast)
-        // ==========================================
-        function showToast(message, type = 'info') {
-            const container = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            
-            const styles = {
-                success: 'bg-emerald-950/95 border-emerald-500/50 text-emerald-200',
-                error: 'bg-red-950/95 border-red-500/50 text-red-200',
-                warning: 'bg-amber-950/95 border-amber-500/50 text-amber-200',
-                info: 'bg-slate-900/95 border-purple-500/50 text-purple-200'
-            };
-            const icons = {
-                success: 'fa-circle-check text-emerald-400',
-                error: 'fa-circle-exclamation text-red-400',
-                warning: 'fa-triangle-exclamation text-amber-400',
-                info: 'fa-circle-info text-purple-400'
-            };
-
-            toast.className = `pointer-events-auto flex items-center gap-2.5 px-4 py-3 rounded-2xl border shadow-xl backdrop-blur-md text-xs font-medium transition-all duration-300 translate-y-2 opacity-0 ${styles[type] || styles.info}`;
-            toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.info} text-sm"></i><span>${message}</span>`;
-            container.appendChild(toast);
-
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-y-2', 'opacity-0');
-            });
-
-            setTimeout(() => {
-                toast.classList.add('translate-y-2', 'opacity-0');
-                setTimeout(() => toast.remove(), 500);
-            }, 5000);
-        }
-
-        // ==========================================
-        // 測試模式與 GAS 設定管理
-        // ==========================================
         function toggleDemoMode(sourceEl) {
-            const desktopToggle = document.getElementById('demoModeToggle');
-            const mobileToggle = document.getElementById('demoModeToggleMobile');
-            const tabletToggle = document.getElementById('demoModeToggleTablet');
             if (sourceEl) {
                 isDemoMode = sourceEl.checked;
-            } else if (desktopToggle) {
-                isDemoMode = desktopToggle.checked;
             }
-            if (desktopToggle) desktopToggle.checked = isDemoMode;
-            if (mobileToggle) mobileToggle.checked = isDemoMode;
-            if (tabletToggle) tabletToggle.checked = isDemoMode;
+            ['demoModeToggle', 'demoModeToggleMobile', 'demoModeToggleTablet'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.checked = isDemoMode;
+            });
 
-            const gasWarn = document.getElementById('gasWarning');
-            if (gasWarn) {
-                if (!isDemoMode && (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址")) gasWarn.classList.remove('hidden');
-                else gasWarn.classList.add('hidden');
+            const warning = document.getElementById('gasWarning');
+            if (warning) {
+                if (!isDemoMode && (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址")) {
+                    warning.classList.remove('hidden');
+                } else {
+                    warning.classList.add('hidden');
+                }
+            }
+
+            if (sourceEl) {
+                showToast(isDemoMode ? '已切換為模擬測試模式' : '已切換為真實 API 連線模式', 'info');
             }
         }
 
-        function openSettingsModal() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function openSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            const input = document.getElementById('gasUrlInput');
+            if (input) input.value = gasApiUrl || '';
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeSettingsModal() {
+            const modal = document.getElementById('settingsModal');
+            if (modal) modal.classList.add('hidden');
+        }
+
         function saveGasSettings() {
-            gasApiUrl = document.getElementById('gasUrlInput').value.trim();
+            const inputVal = (document.getElementById('gasUrlInput').value || '').trim();
+            gasApiUrl = inputVal;
             localStorage.setItem('SHOPEE_GAS_URL', gasApiUrl);
-            closeSettingsModal();
-            if (gasApiUrl && gasApiUrl !== "請在此填寫你的_GAS_網址") {
-                if (document.getElementById('demoModeToggle')) document.getElementById('demoModeToggle').checked = false;
-                if (document.getElementById('demoModeToggleMobile')) document.getElementById('demoModeToggleMobile').checked = false;
-                if (document.getElementById('demoModeToggleTablet')) document.getElementById('demoModeToggleTablet').checked = false;
-                showToast('GAS API 網址已儲存！', 'success');
+
+            if (gasApiUrl && gasApiUrl.startsWith('http')) {
+                isDemoMode = false;
+                toggleDemoMode();
+                showToast('GAS API 網址已儲存並切換為連線模式', 'success');
+            } else {
+                isDemoMode = true;
+                toggleDemoMode();
+                showToast('已清除網址，維持模擬測試模式', 'warning');
             }
-            toggleDemoMode();
+            closeSettingsModal();
         }
 
         // ==========================================
-        // 日期區間處理邏輯
+        // 日期區間處理邏輯 (強制鎖定台灣時間 UTC+8，不受裝置時區影響)
         // ==========================================
+        const TW_OFFSET_MS = 8 * 60 * 60 * 1000;
+        const TW_OFFSET_SEC = 8 * 60 * 60;
+
+        // 取得目前台灣時間的年、月(0~11)、日、星期(0~6)
+        function getTaiwanNowParts() {
+            const twShifted = new Date(Date.now() + TW_OFFSET_MS);
+            return {
+                year: twShifted.getUTCFullYear(),
+                month: twShifted.getUTCMonth(),
+                day: twShifted.getUTCDate(),
+                dayOfWeek: twShifted.getUTCDay()
+            };
+        }
+
+        // 取得台灣時間的 YYYY-MM-DD 字串
+        function getTaiwanDateString(offsetDays = 0) {
+            const { year, month, day } = getTaiwanNowParts();
+            const d = new Date(Date.UTC(year, month, day + offsetDays));
+            const yyyy = d.getUTCFullYear();
+            const mm = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const dd = String(d.getUTCDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        // 將指定的台灣時間 (年, 月0~11, 日, 時, 分, 秒) 轉換為標準 Unix 時間戳 (秒)
+        function twDateToUnixSec(year, month, day, hour = 0, minute = 0, second = 0) {
+            return Math.floor(Date.UTC(year, month, day, hour, minute, second) / 1000) - TW_OFFSET_SEC;
+        }
+
         function handleDateSelectChange() {
             const selectVal = document.getElementById('reportDaysSelect').value;
             const container = document.getElementById('customDateContainer');
@@ -539,167 +645,178 @@
 
         function getDateRangeParams() {
             const selectVal = document.getElementById('reportDaysSelect').value;
-            const now = new Date();
-            const nowSec = Math.floor(now.getTime() / 1000);
+            const nowSec = Math.floor(Date.now() / 1000);
+            const { year, month, day, dayOfWeek } = getTaiwanNowParts();
 
             if (selectVal === '1') {
-                const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
-                return { startTime: Math.floor(startOfToday.getTime() / 1000), endTime: nowSec };
+                return {
+                    startTime: twDateToUnixSec(year, month, day, 0, 0, 0),
+                    endTime: nowSec
+                };
             } else if (selectVal === 'yesterday') {
-                const startYest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0);
-                const endYest = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59);
-                return { startTime: Math.floor(startYest.getTime() / 1000), endTime: Math.floor(endYest.getTime() / 1000) };
+                return {
+                    startTime: twDateToUnixSec(year, month, day - 1, 0, 0, 0),
+                    endTime: twDateToUnixSec(year, month, day - 1, 23, 59, 59)
+                };
             } else if (selectVal === 'lastWeek') {
-                const dayOfWeek = now.getDay() || 7;
-                const startLastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek - 6, 0, 0, 0);
-                const endLastWeek = new Date(now.getFullYear(), now.getMonth(), now.getDate() - dayOfWeek, 23, 59, 59);
-                return { startTime: Math.floor(startLastWeek.getTime() / 1000), endTime: Math.floor(endLastWeek.getTime() / 1000) };
+                const normalizedDow = dayOfWeek || 7;
+                return {
+                    startTime: twDateToUnixSec(year, month, day - normalizedDow - 6, 0, 0, 0),
+                    endTime: twDateToUnixSec(year, month, day - normalizedDow, 23, 59, 59)
+                };
             } else if (selectVal === 'lastMonth') {
-                const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1, 0, 0, 0);
-                const endLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59);
-                return { startTime: Math.floor(startLastMonth.getTime() / 1000), endTime: Math.floor(endLastMonth.getTime() / 1000) };
+                return {
+                    startTime: twDateToUnixSec(year, month - 1, 1, 0, 0, 0),
+                    endTime: twDateToUnixSec(year, month, 0, 23, 59, 59)
+                };
             } else if (selectVal === 'custom') {
                 const startStr = document.getElementById('customStartDate').value;
                 const endStr = document.getElementById('customEndDate').value;
-                const startObj = startStr ? new Date(startStr + 'T00:00:00') : new Date(now.getTime() - 7 * 86400000);
-                const endObj = endStr ? new Date(endStr + 'T23:59:59') : now;
-                return { startTime: Math.floor(startObj.getTime() / 1000), endTime: Math.floor(endObj.getTime() / 1000) };
+                let startTime, endTime;
+
+                if (startStr) {
+                    const [sy, sm, sd] = startStr.split('-').map(Number);
+                    startTime = twDateToUnixSec(sy, sm - 1, sd, 0, 0, 0);
+                } else {
+                    startTime = nowSec - 7 * 86400;
+                }
+
+                if (endStr) {
+                    const [ey, em, ed] = endStr.split('-').map(Number);
+                    endTime = twDateToUnixSec(ey, em - 1, ed, 23, 59, 59);
+                } else {
+                    endTime = nowSec;
+                }
+
+                return { startTime, endTime };
             } else {
                 return { days: selectVal };
             }
         }
 
         // ==========================================
-        // 取得轉換成效報表 (訂單查詢)
+        // TAB 1: 業績與訂單報表查詢與渲染
         // ==========================================
+        function getMockOrders() {
+            const { year, month, day } = getTaiwanNowParts();
+            const yyyymmdd = getTaiwanDateString(-1).replace(/-/g, '').slice(2);
+            return [
+                {
+                    orderSn: `${yyyymmdd}A98X12`,
+                    purchaseTime: twDateToUnixSec(year, month, day - 1, 21, 35, 12),
+                    orderStatus: 'PAID',
+                    totalCommission: 148.50,
+                    subId1: 'instagram-reels',
+                    items: [
+                        { itemName: '【官方直營】極潤玻尿酸保濕精華液 50ml 買一送一組', itemPrice: 990, qty: 1, estimatedCommission: 148.50 }
+                    ]
+                },
+                {
+                    orderSn: `${yyyymmdd}B74K09`,
+                    purchaseTime: twDateToUnixSec(year, month, day - 1, 18, 12, 40),
+                    orderStatus: 'PENDING',
+                    totalCommission: 82.00,
+                    subId1: 'fb_fanpage',
+                    items: [
+                        { itemName: '無線磁吸行動電源 10000mAh 支援快充自帶線', itemPrice: 680, qty: 1, estimatedCommission: 54.40 },
+                        { itemName: '高透光防摔磁吸手機殼', itemPrice: 276, qty: 1, estimatedCommission: 27.60 }
+                    ]
+                },
+                {
+                    orderSn: `${yyyymmdd}C31M55`,
+                    purchaseTime: twDateToUnixSec(year, month, day - 1, 14, 05, 19),
+                    orderStatus: 'COMPLETED',
+                    totalCommission: 215.00,
+                    subId1: 'AP----',
+                    items: [
+                        { itemName: '日本原裝進口 膠原蛋白美妍粉 30日份補充包', itemPrice: 1433, qty: 1, estimatedCommission: 215.00 }
+                    ]
+                },
+                {
+                    orderSn: `${yyyymmdd}D19P88`,
+                    purchaseTime: twDateToUnixSec(year, month, day - 1, 10, 48, 03),
+                    orderStatus: 'CANCELLED',
+                    totalCommission: 0,
+                    subId1: 'line-group',
+                    items: [
+                        { itemName: '韓系簡約大容量帆布托特包', itemPrice: 390, qty: 1, estimatedCommission: 0 }
+                    ]
+                }
+            ];
+        }
+
         async function fetchConversionReport() {
             const tbody = document.getElementById('orderTableBody');
-            const keyword = document.getElementById('orderSearchInput').value.trim();
+            const keyword = (document.getElementById('orderSearchInput').value || '').trim();
+            const dateParams = getDateRangeParams();
 
-            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-purple-400"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在載入訂單數據...</td></tr>`;
-
-            if (isDemoMode) {
-                setTimeout(() => {
-                    const nowSec = Math.floor(Date.now() / 1000);
-                    let mockOrders = [
-                        {
-                            orderSn: "261114A89K2L1M",
-                            purchaseTime: nowSec - 3600 * 3,
-                            orderStatus: "PENDING",
-                            totalCommission: 148.50,
-                            subId1: "AP----",
-                            items: [
-                                { itemName: "【官方直營】極潤玻尿酸保濕修護精華液 50ml 買一送一組", itemPrice: 1280, qty: 1, estimatedCommission: 115.20 },
-                                { itemName: "神經醯胺舒緩修護化妝水 200ml 敏感肌適用", itemPrice: 450, qty: 1, estimatedCommission: 33.30 }
-                            ]
-                        },
-                        {
-                            orderSn: "261113B72P9Q4R",
-                            purchaseTime: nowSec - 86400 * 1.2,
-                            orderStatus: "COMPLETED",
-                            totalCommission: 320.00,
-                            subId1: "instagram",
-                            items: [
-                                { itemName: "無線降噪藍牙耳機 Pro 版 超長續航運動防水", itemPrice: 3200, qty: 1, estimatedCommission: 320.00 }
-                            ]
-                        },
-                        {
-                            orderSn: "261112C15X8W3E",
-                            purchaseTime: nowSec - 86400 * 2.5,
-                            orderStatus: "UNPAID",
-                            totalCommission: 85.40,
-                            subId1: "fb_fanpage",
-                            items: [
-                                { itemName: "多功能桌面磁吸無線充電座 支援三合一快充", itemPrice: 890, qty: 1, estimatedCommission: 85.40 }
-                            ]
-                        },
-                        {
-                            orderSn: "261110D44Z6V9T",
-                            purchaseTime: nowSec - 86400 * 4.1,
-                            orderStatus: "CANCELLED",
-                            totalCommission: 0,
-                            subId1: "line_group",
-                            items: [
-                                { itemName: "日系簡約大容量防潑水電腦後背包 15.6吋", itemPrice: 1150, qty: 1, estimatedCommission: 0 }
-                            ]
-                        }
-                    ];
-
-                    if (keyword) {
-                        const kw = keyword.toLowerCase();
-                        mockOrders = mockOrders.filter(o =>
-                            o.orderSn.toLowerCase().includes(kw) ||
-                            o.subId1.toLowerCase().includes(kw) ||
-                            o.items.some(it => it.itemName.toLowerCase().includes(kw))
-                        );
-                    }
-
-                    currentOrdersData = mockOrders;
-                    calculateKPIs(currentOrdersData);
-                    renderOrderTable(currentOrdersData);
-                }, 300);
-                return;
-            }
-
-            if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-amber-400">請先點擊設定按鈕輸入 GAS API 網址，或開啟「模擬測試模式」。</td></tr>`;
-                return;
-            }
+            tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-purple-300"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在載入訂單數據...</td></tr>`;
 
             try {
-                const rangeParams = getDateRangeParams();
-                const urlObj = new URL(gasApiUrl);
-                urlObj.searchParams.set('action', 'getConversionReport');
-                if (rangeParams.days) urlObj.searchParams.set('days', rangeParams.days);
-                if (rangeParams.startTime) urlObj.searchParams.set('startTime', rangeParams.startTime);
-                if (rangeParams.endTime) urlObj.searchParams.set('endTime', rangeParams.endTime);
-                if (keyword) urlObj.searchParams.set('keyword', keyword);
+                let orders = [];
+                if (isDemoMode) {
+                    await new Promise(r => setTimeout(r, 250));
+                    orders = getMockOrders();
+                    if (keyword) {
+                        const kw = keyword.toLowerCase();
+                        orders = orders.filter(o =>
+                            o.orderSn.toLowerCase().includes(kw) ||
+                            (o.subId1 || '').toLowerCase().includes(kw) ||
+                            (o.items || []).some(it => (it.itemName || '').toLowerCase().includes(kw))
+                        );
+                    }
+                } else {
+                    if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
+                        openSettingsModal();
+                        throw new Error("尚未設定 GAS API 網址");
+                    }
+                    const url = new URL(gasApiUrl);
+                    url.searchParams.set('action', 'getConversionReport');
+                    if (keyword) url.searchParams.set('keyword', keyword);
+                    if (dateParams.startTime) url.searchParams.set('startTime', dateParams.startTime);
+                    if (dateParams.endTime) url.searchParams.set('endTime', dateParams.endTime);
+                    if (dateParams.days) url.searchParams.set('days', dateParams.days);
 
-                const response = await fetch(urlObj.toString());
-                const data = await response.json();
+                    const res = await fetch(url.toString());
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error || '取得報表失敗');
+                    orders = (data.report && data.report.nodes) ? data.report.nodes : [];
+                }
 
-                if (!data.success) throw new Error(data.error || "API 回傳失敗");
-
-                currentOrdersData = (data.report && data.report.nodes) ? data.report.nodes : [];
+                currentOrdersData = orders;
                 calculateKPIs(currentOrdersData);
-                renderOrderTable(currentOrdersData);
+                applyCurrentSortAndRender();
+                showToast(`已載入 ${currentOrdersData.length} 筆訂單資料`, 'success');
             } catch (err) {
-                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> 載入失敗：${err.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-rose-400"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${escapeHtml(err.message)}</td></tr>`;
+                showToast(err.message, 'error');
             }
         }
 
-        // ==========================================
-        // 計算 KPI 數據卡片
-        // ==========================================
         function calculateKPIs(nodes) {
             let estTotal = 0;
             let pendingCount = 0;
             const subIdCount = {};
 
             nodes.forEach(order => {
-                if (order.orderStatus !== 'CANCELLED') {
-                    estTotal += parseFloat(order.totalCommission || 0);
-                }
+                estTotal += parseFloat(order.totalCommission || 0);
                 if (order.orderStatus === 'PAID' || order.orderStatus === 'PENDING') {
                     pendingCount++;
                 }
-                const cleanSub = (order.subId1 || '').trim();
-                if (cleanSub && cleanSub !== '無' && !/^-+$/.test(cleanSub)) {
-                    subIdCount[cleanSub] = (subIdCount[cleanSub] || 0) + 1;
+                if (order.subId1 && order.subId1 !== '無') {
+                    subIdCount[order.subId1] = (subIdCount[order.subId1] || 0) + 1;
                 }
             });
 
             document.getElementById('kpiEstCommission').innerText = `$${estTotal.toLocaleString('zh-TW', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             document.getElementById('kpiTotalOrders').innerText = nodes.length;
             document.getElementById('kpiPendingOrders').innerText = pendingCount;
-            document.getElementById('kpiTopSubId').innerText = Object.keys(subIdCount).length > 0
-                ? Object.keys(subIdCount).reduce((a, b) => subIdCount[a] > subIdCount[b] ? a : b)
-                : '-';
+            document.getElementById('kpiTopSubId').innerText =
+                Object.keys(subIdCount).length > 0
+                    ? Object.keys(subIdCount).reduce((a, b) => subIdCount[a] > subIdCount[b] ? a : b)
+                    : '-';
         }
 
-        // ==========================================
-        // 表格欄位排序邏輯
-        // ==========================================
         function sortOrders(column) {
             if (sortState.column === column) {
                 sortState.asc = !sortState.asc;
@@ -707,12 +824,16 @@
                 sortState.column = column;
                 sortState.asc = false;
             }
+            applyCurrentSortAndRender();
+        }
 
+        function applyCurrentSortAndRender() {
+            const { column, asc } = sortState;
             ['time', 'name', 'commission', 'status', 'subid'].forEach(col => {
-                const icon = document.getElementById('sort-' + col);
+                const icon = document.getElementById(`sort-${col}`);
                 if (!icon) return;
                 if (col === column) {
-                    icon.className = sortState.asc
+                    icon.className = asc
                         ? 'fa-solid fa-sort-up text-[10px] text-purple-400 ml-1'
                         : 'fa-solid fa-sort-down text-[10px] text-purple-400 ml-1';
                 } else {
@@ -720,32 +841,32 @@
                 }
             });
 
-            // 直接對 currentOrdersData 進行原地排序，確保表格渲染與匯出 CSV 皆套用最新順序
-            currentOrdersData.sort((a, b) => {
+            const sorted = [...currentOrdersData].sort((a, b) => {
                 let valA, valB;
                 if (column === 'time') {
                     valA = a.purchaseTime || 0;
                     valB = b.purchaseTime || 0;
-                } else if (column === 'name') {
-                    valA = (a.items && a.items[0] ? a.items[0].itemName : '').toLowerCase();
-                    valB = (b.items && b.items[0] ? b.items[0].itemName : '').toLowerCase();
                 } else if (column === 'commission') {
                     valA = parseFloat(a.totalCommission || 0);
                     valB = parseFloat(b.totalCommission || 0);
+                } else if (column === 'name') {
+                    valA = (a.items && a.items[0] ? a.items[0].itemName : '') || '';
+                    valB = (b.items && b.items[0] ? b.items[0].itemName : '') || '';
                 } else if (column === 'status') {
                     valA = a.orderStatus || '';
                     valB = b.orderStatus || '';
                 } else if (column === 'subid') {
-                    valA = (a.subId1 || '').toLowerCase();
-                    valB = (b.subId1 || '').toLowerCase();
+                    valA = a.subId1 || '';
+                    valB = b.subId1 || '';
                 }
 
-                if (valA < valB) return sortState.asc ? -1 : 1;
-                if (valA > valB) return sortState.asc ? 1 : -1;
-                return 0;
+                if (typeof valA === 'string') {
+                    return asc ? valA.localeCompare(valB, 'zh-TW') : valB.localeCompare(valA, 'zh-TW');
+                }
+                return asc ? valA - valB : valB - valA;
             });
 
-            renderOrderTable(currentOrdersData);
+            renderOrdersTable(sorted);
         }
 
         // ==========================================
@@ -757,160 +878,82 @@
             }
             const cleanSubId = subId.toString().trim();
             const lowerSubId = cleanSubId.toLowerCase();
+            const safeSubId = escapeHtml(cleanSubId);
             
             // IG (粉紫色)
             if (lowerSubId.includes('ig') || lowerSubId.includes('instagram')) {
-                return `<span class="px-2.5 py-1 bg-fuchsia-500/25 text-fuchsia-300 border border-fuchsia-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-instagram"></i>${cleanSubId}</span>`;
+                return `<span class="px-2.5 py-1 bg-fuchsia-500/25 text-fuchsia-300 border border-fuchsia-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-instagram"></i>${safeSubId}</span>`;
             }
             // FB (藍色)
             if (lowerSubId.includes('fb') || lowerSubId.includes('facebook')) {
-                return `<span class="px-2.5 py-1 bg-blue-500/25 text-blue-300 border border-blue-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-facebook"></i>${cleanSubId}</span>`;
+                return `<span class="px-2.5 py-1 bg-blue-500/25 text-blue-300 border border-blue-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-facebook"></i>${safeSubId}</span>`;
             }
             // LINE (綠色)
             if (lowerSubId.includes('line')) {
-                return `<span class="px-2.5 py-1 bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-line"></i>${cleanSubId}</span>`;
+                return `<span class="px-2.5 py-1 bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-line"></i>${safeSubId}</span>`;
             }
             // AP 轉換器 (高亮紫色 + 機器人圖示)
             if (lowerSubId.includes('ap')) {
-                return `<span class="px-2.5 py-1 bg-purple-600/30 text-purple-200 border border-purple-400/60 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm shadow-purple-900/50"><i class="fa-solid fa-robot text-purple-300"></i>${cleanSubId}</span>`;
+                return `<span class="px-2.5 py-1 bg-purple-600/30 text-purple-200 border border-purple-400/60 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm shadow-purple-900/50"><i class="fa-solid fa-robot text-purple-300"></i>${safeSubId}</span>`;
             }
             // 預設樣式 (深青色)
-            return `<span class="px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-700/60 rounded-lg text-[11px] font-mono inline-flex items-center gap-1"><i class="fa-solid fa-tag text-cyan-400"></i>${cleanSubId}</span>`;
+            return `<span class="px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-700/60 rounded-lg text-[11px] font-mono inline-flex items-center gap-1"><i class="fa-solid fa-tag text-cyan-400"></i>${safeSubId}</span>`;
         }
 
-        // ==========================================
-        // 訂單狀態徽章渲染
-        // ==========================================
-		function escapeHtml(str) {
-            return String(str ?? '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-        }
-		
-        const STATUS_CONFIG = {
-			UNPAID: {
-				label: '未付款',
-				badgeClass: 'bg-slate-800/90 text-slate-400 border-slate-700/80',
-				dotClass: 'bg-slate-500',
-				pulse: false,
-			},
-			PAID: {
-				label: '已付款',
-				badgeClass: 'bg-sky-500/10 text-sky-300 border-sky-500/30 shadow-[0_0_10px_rgba(14,165,233,0.12)]',
-				dotClass: 'bg-sky-400',
-				pulse: true, 
-			},
-			PENDING: {
-				label: '審核中',
-				badgeClass: 'bg-amber-500/10 text-amber-300 border-amber-500/30 shadow-[0_0_10px_rgba(245,158,11,0.12)]',
-				dotClass: 'bg-amber-400',
-				pulse: false,
-			},
-			COMPLETED: {
-				label: '已完成',
-				badgeClass: 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.12)]',
-				dotClass: 'bg-emerald-400',
-				pulse: false,
-			},
-			CANCELLED: {
-				label: '已取消',
-				badgeClass: 'bg-rose-500/10 text-rose-300 border-rose-500/30',
-				dotClass: 'bg-rose-400',
-				pulse: true,
-			}
-		};
-
-		function getStatusBadge(status) {
-			// 統一轉大寫防呆，避免 API 偶爾回傳小寫 pending / paid
-			const normalizedStatus = String(status ?? '').toUpperCase();
-			const cfg = STATUS_CONFIG[normalizedStatus] || {
-				label: escapeHtml(status || '未知狀態'),
-				badgeClass: 'bg-slate-800 text-slate-400 border-slate-700',
-				dotClass: 'bg-slate-500',
-				pulse: false,
-			};
-
-			const dotHtml = cfg.pulse
-				? `<span class="relative flex h-1.5 w-1.5 shrink-0">
-					<span class="animate-ping absolute inline-flex h-full w-full rounded-full ${cfg.dotClass} opacity-75"></span>
-					<span class="relative inline-flex rounded-full h-1.5 w-1.5 ${cfg.dotClass}"></span>
-				  </span>`
-				: `<span class="h-1.5 w-1.5 shrink-0 rounded-full ${cfg.dotClass}"></span>`;
-
-			return `
-				<span title="${cfg.tip}" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border tracking-wide ${cfg.badgeClass}">
-					${dotHtml}
-					<span class="leading-none">${cfg.label}</span>
-				</span>
-			`;
-		}
-
-        // ==========================================
-        // 渲染訂單表格 (支援一筆訂單多商品垂直展開)
-        // ==========================================
-        function renderOrderTable(orders = currentOrdersData) {
-            const tableBody = document.getElementById('orderTableBody');
-            if (!tableBody) return;
-            tableBody.innerHTML = '';
-            
+        function renderOrdersTable(orders) {
+            const tbody = document.getElementById('orderTableBody');
             if (!orders || orders.length === 0) {
-                tableBody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">此區間或搜尋條件下尚無分潤訂單紀錄</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-500">查無符合條件的訂單紀錄</td></tr>`;
                 return;
             }
 
-            // 產生序號 (No.)，並支援同一筆訂單多商品垂直堆疊顯示
-            orders.forEach((order, index) => {
-                const items = (order.items && order.items.length > 0)
-                    ? order.items
-                    : [{ itemName: '未知商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
+            tbody.innerHTML = orders.map((order, idx) => {
+                const items = (order.items && order.items.length > 0) ? order.items : [{ itemName: '蝦皮商品', itemPrice: 0, qty: 1, estimatedCommission: order.totalCommission || 0 }];
                 const isMulti = items.length > 1;
-                const dateStr = new Date(order.purchaseTime * 1000).toLocaleString('zh-TW', { hour12: false });
+                const dateStr = new Date(order.purchaseTime * 1000).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
                 const totalComm = parseFloat(order.totalCommission || 0).toFixed(2);
 
-                // 商品名稱多行堆疊
-                const namesHtml = items.map((it, idx) => `
-                    <div class="truncate ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}" title="${it.itemName}">
-                        ${isMulti ? `<span class="text-[10px] text-purple-400 font-mono mr-1">${idx + 1}.</span>` : ''}${it.itemName}
-                    </div>
-                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400 font-semibold">共 ${items.length} 項商品</div>` : '');
+                const statusInfo = STATUS_CONFIG[order.orderStatus] || {
+                    label: order.orderStatus || '未知',
+                    badgeClass: 'bg-slate-500/15 text-slate-300 border-slate-500/30',
+                    dotClass: 'bg-slate-400',
+                    pulse: false
+                };
 
-                // 數量與單價多行堆疊 (與左側商品行高對齊)
-                const qtyPriceHtml = items.map((it, idx) => `
-                    <div class="${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
-                        ${it.qty} x $${parseFloat(it.itemPrice || 0).toLocaleString()}
+                const itemsHtml = items.map(it => `
+                    <div class="truncate max-w-xs sm:max-w-sm" title="${escapeHtml(it.itemName)}">
+                        ${isMulti ? '<span class="text-purple-400 mr-1">•</span>' : ''}${escapeHtml(it.itemName)}
                     </div>
-                `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400">訂單合計</div>` : '');
+                `).join('');
 
-                // 預估佣金多行堆疊 + 多商品時底部顯示總佣金
-                const commHtml = items.map((it, idx) => {
-                    const c = parseFloat(it.estimatedCommission || 0).toFixed(2);
-                    return `
-                        <div class="${isMulti ? 'text-slate-300 font-normal' : 'font-bold text-emerald-400'} ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
-                            +$${c}
-                        </div>
-                    `;
-                }).join('') + (isMulti ? `<div class="pt-1 font-bold text-emerald-400 border-t border-slate-700/80">+$${totalComm}</div>` : '');
-                
-                tableBody.insertAdjacentHTML('beforeend', `
-                    <tr class="hover:bg-slate-800/40 transition-colors align-top">
-                        <td class="p-3 text-center text-slate-500 font-mono text-[10px] bg-slate-800/20">${index + 1}</td>
-                        <td class="p-3 font-mono whitespace-nowrap"><div class="text-white font-bold">${order.orderSn}</div><div class="text-[10px] text-slate-500">${dateStr}</div></td>
-                        <td class="p-3 max-w-[240px] space-y-1.5">${namesHtml}</td>
-                        <td class="p-3 font-mono whitespace-nowrap space-y-1.5">${qtyPriceHtml}</td>
-                        <td class="p-3 font-mono whitespace-nowrap space-y-1.5">${commHtml}</td>
-                        <td class="p-3 whitespace-nowrap">${getStatusBadge(order.orderStatus)}</td>
-                        <td class="p-3 whitespace-nowrap">${getSubIdBadge(order.subId1)}</td>
+                const qtyPriceHtml = items.map(it => `
+                    <div class="text-slate-300 whitespace-nowrap">${it.qty || 1} 件 × $${Number(it.itemPrice || 0).toLocaleString()}</div>
+                `).join('');
+
+                const subIdBadge = getSubIdBadge(order.subId1);
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition-colors">
+                        <td class="p-3 text-center text-slate-500 font-mono">${idx + 1}</td>
+                        <td class="p-3 whitespace-nowrap">
+                            <div class="font-mono font-bold text-slate-200">${escapeHtml(order.orderSn)}</div>
+                            <div class="text-[11px] text-slate-400 mt-0.5">${escapeHtml(dateStr)}</div>
+                        </td>
+                        <td class="p-3 space-y-1">${itemsHtml}</td>
+                        <td class="p-3 space-y-1 text-[11px]">${qtyPriceHtml}</td>
+                        <td class="p-3 whitespace-nowrap font-bold text-emerald-400">$${totalComm}</td>
+                        <td class="p-3 whitespace-nowrap">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${statusInfo.badgeClass}">
+                                <span class="w-1.5 h-1.5 rounded-full ${statusInfo.dotClass} ${statusInfo.pulse ? 'animate-pulse' : ''}"></span>
+                                ${escapeHtml(statusInfo.label)}
+                            </span>
+                        </td>
+                        <td class="p-3 whitespace-nowrap">${subIdBadge}</td>
                     </tr>
-                `);
-            });
+                `;
+            }).join('');
         }
 
-        // ==========================================
-        // 匯出 CSV 功能
-        // ==========================================
         function exportToCSV() {
             if (!currentOrdersData || currentOrdersData.length === 0) {
                 showToast('目前沒有可匯出的訂單資料', 'warning');
@@ -919,80 +962,71 @@
 
             const headers = ['訂單編號', '訂單時間', '購買商品', '數量', '單價', '預估佣金', '訂單狀態', 'SubID'];
             const rows = currentOrdersData.map(order => {
-                const dateStr = new Date((order.purchaseTime || 0) * 1000).toLocaleString('zh-TW', { hour12: false });
+                const dateStr = new Date((order.purchaseTime || 0) * 1000).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
                 const items = (order.items && order.items.length > 0) ? order.items : [{}];
-                const names = items.map(i => (i.itemName || '').replace(/"/g, '""')).join(' | ');
-                const qtys = items.map(i => i.qty || 1).join(' | ');
-                const prices = items.map(i => i.itemPrice || 0).join(' | ');
+                const itemNames = items.map(it => it.itemName || '').join(' / ');
+                const itemQtys = items.map(it => it.qty || 1).join(' / ');
+                const itemPrices = items.map(it => it.itemPrice || 0).join(' / ');
 
                 return [
-                    `"${order.orderSn}"`,
-                    `"${dateStr}"`,
-                    `"${names}"`,
-                    `"${qtys}"`,
-                    `"${prices}"`,
-                    parseFloat(order.totalCommission || 0).toFixed(2),
-                    `"${order.orderStatus}"`,
-                    `"${order.subId1 || '無'}"`
-                ].join(',');
+                    order.orderSn || '',
+                    dateStr,
+                    itemNames,
+                    itemQtys,
+                    itemPrices,
+                    order.totalCommission || 0,
+                    order.orderStatus || '',
+                    order.subId1 || '無'
+                ].map(val => `"${String(val).replace(/"/g, '""')}"`).join(',');
             });
 
             const csvContent = '\uFEFF' + [headers.join(','), ...rows].join('\n');
             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
+
             const link = document.createElement('a');
             link.href = url;
-            link.download = `shopee_orders_${new Date().toISOString().slice(0, 10)}.csv`;
+            link.download = `shopee_orders_${getTaiwanDateString()}.csv`;
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-            showToast('CSV 報表已成功下載！', 'success');
+
+            showToast('CSV 報表已成功匯出', 'success');
         }
 
-        // ==========================================
-        // 補齊 / 同步歷史訂單至雲端試算表
-        // ==========================================
         async function syncToCloud() {
             const btn = document.getElementById('btnSyncCloud');
-            const originalHtml = btn.innerHTML;
-
             if (isDemoMode) {
-                btn.disabled = true;
-                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 同步中...`;
-                setTimeout(() => {
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                    showToast('【測試模式】同步完成：新增 3 筆單，更新 1 筆狀態', 'success');
-                }, 800);
+                showToast('目前為模擬測試模式，請關閉測試模式並設定 GAS 網址後再同步至雲端', 'warning');
                 return;
             }
-
             if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
-                showToast('請先設定 GAS API 網址', 'warning');
                 openSettingsModal();
                 return;
             }
 
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 同步中...`;
+
             try {
-                btn.disabled = true;
-                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> 同步中...`;
+                const dateParams = getDateRangeParams();
+                const keyword = (document.getElementById('orderSearchInput').value || '').trim();
+                const url = new URL(gasApiUrl);
+                url.searchParams.set('action', 'syncToSheet');
+                if (keyword) url.searchParams.set('keyword', keyword);
+                if (dateParams.startTime) url.searchParams.set('startTime', dateParams.startTime);
+                if (dateParams.endTime) url.searchParams.set('endTime', dateParams.endTime);
+                if (dateParams.days) url.searchParams.set('days', dateParams.days);
 
-                const rangeParams = getDateRangeParams();
-                const urlObj = new URL(gasApiUrl);
-                urlObj.searchParams.set('action', 'syncToSheet');
-                if (rangeParams.days) urlObj.searchParams.set('days', rangeParams.days);
-                if (rangeParams.startTime) urlObj.searchParams.set('startTime', rangeParams.startTime);
-                if (rangeParams.endTime) urlObj.searchParams.set('endTime', rangeParams.endTime);
-
-                const response = await fetch(urlObj.toString());
-                const data = await response.json();
-
-                if (!data.success) throw new Error(data.error || '同步失敗');
+                const res = await fetch(url.toString());
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || '雲端同步失敗');
 
                 showToast(`雲端同步完成！新增 ${data.addedCount || 0} 筆，更新 ${data.updatedCount || 0} 筆狀態`, 'success');
             } catch (err) {
-                showToast(`雲端同步發生錯誤：${err.message}`, 'error');
+                showToast(`同步失敗：${err.message}`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;
@@ -1000,87 +1034,153 @@
         }
 
         // ==========================================
-        // TAB 2: 高佣金爆款選品搜尋
+        // TAB 2: 高佣金爆款選品
         // ==========================================
+        function getMockHighCommissionProducts() {
+            return [
+                {
+                    itemId: '19968292831',
+                    productName: '【官方直營】極潤玻尿酸保濕精華液 50ml 買一送一超值組',
+                    price: 990,
+                    commissionRate: '18.5',
+                    commission: 183.15,
+                    sales: 3420,
+                    shopName: '官方美妝旗艦店',
+                    productLink: 'https://shopee.tw/product/261740164/19968292831'
+                },
+                {
+                    itemId: '24819204112',
+                    productName: '多功能無線磁吸快充行動電源 10000mAh 台灣認證',
+                    price: 680,
+                    commissionRate: '15.0',
+                    commission: 102.00,
+                    sales: 5180,
+                    shopName: '3C 數位生活館',
+                    productLink: 'https://shopee.tw/product/131441298/24819204112'
+                },
+                {
+                    itemId: '38192019283',
+                    productName: '日本專利膠原蛋白胜肽粉 30日份 莓果風味',
+                    price: 1280,
+                    commissionRate: '22.0',
+                    commission: 281.60,
+                    sales: 1920,
+                    shopName: '日系保健嚴選館',
+                    productLink: 'https://shopee.tw/product/88271625/38192019283'
+                },
+                {
+                    itemId: '49281726354',
+                    productName: '304不鏽鋼雙層真空保溫隨行杯 750ml 附吸管',
+                    price: 349,
+                    commissionRate: '14.0',
+                    commission: 48.86,
+                    sales: 8420,
+                    shopName: '質感居家選物',
+                    productLink: 'https://shopee.tw/product/55192837/49281726354'
+                }
+            ];
+        }
+
         async function fetchHighCommissionProducts() {
             const grid = document.getElementById('productGrid');
-            const keyword = document.getElementById('productSearchKey').value.trim();
+            const keyword = (document.getElementById('productSearchKey').value || '').trim();
             const sortType = document.getElementById('sortCommissionSelect').value;
 
-            grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-400 glass-card rounded-2xl"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在搜尋高佣金商品...</div>`;
-
-            if (isDemoMode) {
-                setTimeout(() => {
-                    const mockProducts = [
-                        { productName: '【官方旗艦】高濃度維他命C亮白淡斑精華 30ml', price: 890, commissionRate: '18.5', commission: 164.65, shopName: '官方美妝旗艦店', productLink: 'https://shopee.tw/product/12345/67890' },
-                        { productName: '超輕量石墨烯恆溫四季被 雙人加大抗菌防蟎', price: 1480, commissionRate: '15.0', commission: 222.00, shopName: '居家生活嚴選館', productLink: 'https://shopee.tw/product/22345/77890' },
-                        { productName: 'GaN 氮化鎵 65W 三孔快速充電器 支援筆電手機', price: 599, commissionRate: '12.0', commission: 71.88, shopName: '3C 數位配件專賣', productLink: 'https://shopee.tw/product/32345/87890' },
-                        { productName: '益生菌高纖順暢酵素粉 30包/盒 專利配方', price: 750, commissionRate: '22.0', commission: 165.00, shopName: '健康生醫官方店', productLink: 'https://shopee.tw/product/42345/97890' }
-                    ];
-                    renderProductGrid(mockProducts);
-                }, 400);
-                return;
-            }
-
-            if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
-                grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-400 glass-card rounded-2xl">請先設定 GAS API 網址，或開啟模擬測試模式。</div>`;
-                return;
-            }
+            grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-300 glass-card rounded-2xl"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在搜尋高佣金商品...</div>`;
 
             try {
-                const urlObj = new URL(gasApiUrl);
-                urlObj.searchParams.set('action', 'getHighCommissionProducts');
-                urlObj.searchParams.set('keyword', keyword);
-                urlObj.searchParams.set('sortType', sortType);
-                urlObj.searchParams.set('limit', '50');
+                let products = [];
+                if (isDemoMode) {
+                    await new Promise(r => setTimeout(r, 250));
+                    products = getMockHighCommissionProducts();
+                    if (keyword) {
+                        const kw = keyword.toLowerCase();
+                        products = products.filter(p => p.productName.toLowerCase().includes(kw) || p.shopName.toLowerCase().includes(kw));
+                    }
+                    if (sortType === '5') {
+                        products.sort((a, b) => parseFloat(b.commissionRate) - parseFloat(a.commissionRate));
+                    } else if (sortType === '2') {
+                        products.sort((a, b) => (b.sales || 0) - (a.sales || 0));
+                    } else if (sortType === '3') {
+                        products.sort((a, b) => (a.price || 0) - (b.price || 0));
+                    }
+                } else {
+                    if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
+                        openSettingsModal();
+                        throw new Error("尚未設定 GAS API 網址");
+                    }
+                    const url = new URL(gasApiUrl);
+                    url.searchParams.set('action', 'getHighCommissionProducts');
+                    url.searchParams.set('keyword', keyword);
+                    url.searchParams.set('sortType', sortType);
+                    url.searchParams.set('limit', '50');
 
-                const response = await fetch(urlObj.toString());
-                const data = await response.json();
+                    const res = await fetch(url.toString());
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error || '搜尋商品失敗');
+                    products = (data.products && data.products.nodes) ? data.products.nodes : [];
+                }
 
-                if (!data.success) throw new Error(data.error || '搜尋失敗');
-                renderProductGrid(data.products ? data.products.nodes : []);
+                if (products.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">找不到符合條件的高佣金商品</div>`;
+                    return;
+                }
+
+                grid.innerHTML = products.map(p => `
+                    <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-4 hover:border-amber-500/40 transition-all">
+                        <div class="space-y-2.5">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-extrabold">
+                                    佣金 ${escapeHtml(p.commissionRate)}%
+                                </span>
+                                <span class="text-[11px] text-slate-400 truncate max-w-[140px]">${escapeHtml(p.shopName)}</span>
+                            </div>
+                            <h4 class="text-xs font-bold text-slate-100 line-clamp-2 leading-relaxed" title="${escapeHtml(p.productName)}">
+                                ${escapeHtml(p.productName)}
+                            </h4>
+                        </div>
+                        <div class="space-y-3 pt-2 border-t border-slate-800/80">
+                            <div class="flex items-end justify-between">
+                                <div>
+                                    <div class="text-[10px] text-slate-400">商品售價</div>
+                                    <div class="text-sm font-bold text-white">$${Number(p.price || 0).toLocaleString()}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] text-slate-400">預估單件分潤</div>
+                                    <div class="text-base font-extrabold text-emerald-400">$${Number(p.commission || 0).toFixed(1)}</div>
+                                </div>
+                            </div>
+                            <div class="flex gap-2">
+                                <button onclick="copyTextToClipboard('${escapeHtml(p.productLink)}', '已複製推廣連結')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] font-bold transition-colors">
+                                    <i class="fa-solid fa-copy mr-1"></i>複製連結
+                                </button>
+                                <button onclick="useProductInConverter('${escapeHtml(p.productLink)}')" class="flex-1 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 rounded-xl text-[11px] font-bold transition-colors">
+                                    <i class="fa-solid fa-tags mr-1"></i>自訂SubID
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
             } catch (err) {
-                grid.innerHTML = `<div class="col-span-full p-12 text-center text-red-400 glass-card rounded-2xl">搜尋發生錯誤：${err.message}</div>`;
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-rose-400 glass-card rounded-2xl">${escapeHtml(err.message)}</div>`;
+                showToast(err.message, 'error');
             }
         }
 
-        function renderProductGrid(products) {
-            const grid = document.getElementById('productGrid');
-            if (!products || products.length === 0) {
-                grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">找不到符合條件的高佣金商品</div>`;
-                return;
-            }
-
-            grid.innerHTML = products.map(p => `
-                <div class="glass-card p-4 rounded-2xl flex flex-col justify-between gap-3 hover:border-amber-500/40 transition-all">
-                    <div class="space-y-2">
-                        <div class="flex items-center justify-between gap-2">
-                            <span class="text-[10px] text-slate-400 truncate"><i class="fa-solid fa-store mr-1"></i>${p.shopName || '蝦皮賣家'}</span>
-                            <span class="px-2 py-0.5 bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-lg text-[11px] font-extrabold shrink-0">
-                                佣金 ${p.commissionRate}%
-                            </span>
-                        </div>
-                        <h4 class="text-xs font-bold text-slate-100 line-clamp-2 leading-relaxed" title="${p.productName}">${p.productName}</h4>
-                    </div>
-                    <div class="space-y-2.5 pt-2 border-t border-slate-800/80">
-                        <div class="flex items-baseline justify-between">
-                            <span class="text-sm font-extrabold text-white">$${Number(p.price || 0).toLocaleString()}</span>
-                            <span class="text-xs font-bold text-emerald-400">預估賺 $${parseFloat(p.commission || 0).toFixed(1)}</span>
-                        </div>
-                        <button onclick="copyStringToClipboard('${p.productLink}', '已複製推廣連結！')" class="w-full py-2 bg-slate-800 hover:bg-purple-600 text-slate-200 hover:text-white rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5">
-                            <i class="fa-regular fa-copy"></i> 複製推廣連結
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+        function useProductInConverter(productUrl) {
+            document.getElementById('convertInputUrl').value = productUrl;
+            switchTab('converter');
+            showToast('已帶入商品網址，請填寫 SubID 標籤', 'info');
         }
 
         // ==========================================
         // TAB 3: SubID 渠道轉換器
         // ==========================================
+        let convertHistory = JSON.parse(localStorage.getItem('SHOPEE_CONVERT_HISTORY') || '[]');
+
         async function generateSubIdLink() {
-            const urlInput = document.getElementById('convertInputUrl').value.trim();
-            if (!urlInput) {
+            const rawUrl = (document.getElementById('convertInputUrl').value || '').trim();
+            if (!rawUrl) {
                 showToast('請先輸入蝦皮商品網址', 'warning');
                 document.getElementById('convertInputUrl').focus();
                 return;
@@ -1092,87 +1192,96 @@
                 document.getElementById('subId3Input').value.trim(),
                 document.getElementById('subId4Input').value.trim(),
                 document.getElementById('subId5Input').value.trim()
-            ];
+            ].filter(Boolean);
 
             const btn = document.getElementById('btnGenerateSubId');
-            const originalHtml = btn.innerHTML;
+            const originalText = btn.innerText;
             btn.disabled = true;
-            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-1"></i> 生成中...`;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin mr-1.5"></i>正在生成短網址...`;
 
             try {
                 let shortLink = '';
                 if (isDemoMode) {
-                    await new Promise(r => setTimeout(r, 350));
-                    shortLink = `https://s.shopee.tw/demo_${Math.random().toString(36).substring(2, 8)}`;
+                    await new Promise(r => setTimeout(r, 250));
+                    const randomCode = Math.random().toString(36).substring(2, 9);
+                    shortLink = `https://s.shopee.tw/${randomCode}`;
                 } else {
                     if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
-                        throw new Error('請先設定 GAS API 網址');
+                        openSettingsModal();
+                        throw new Error("尚未設定 GAS API 網址");
                     }
-                    const urlObj = new URL(gasApiUrl);
-                    urlObj.searchParams.set('action', 'generateShortLink');
-                    urlObj.searchParams.set('url', urlInput);
-                    subIds.forEach((val, i) => {
-                        if (val) urlObj.searchParams.set(`subId${i + 1}`, val);
+                    const url = new URL(gasApiUrl);
+                    url.searchParams.set('action', 'generateShortLink');
+                    url.searchParams.set('url', rawUrl);
+                    ['subId1', 'subId2', 'subId3', 'subId4', 'subId5'].forEach((key, idx) => {
+                        const val = document.getElementById(`${key}Input`).value.trim();
+                        if (val) url.searchParams.set(key, val);
                     });
 
-                    const response = await fetch(urlObj.toString());
-                    const data = await response.json();
-                    if (!data.success) throw new Error(data.error || '生成失敗');
+                    const res = await fetch(url.toString());
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error || '短網址生成失敗');
                     shortLink = data.shortLink;
                 }
 
-                prependConvertedResult(urlInput, shortLink, subIds.filter(Boolean));
-                showToast('短網址生成成功！', 'success');
+                const record = {
+                    shortLink,
+                    originUrl: rawUrl,
+                    subIds: subIds.length > 0 ? subIds.join(' / ') : '無標籤',
+                    time: new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false })
+                };
+
+                convertHistory.unshift(record);
+                if (convertHistory.length > 30) convertHistory.pop();
+                localStorage.setItem('SHOPEE_CONVERT_HISTORY', JSON.stringify(convertHistory));
+
+                renderConvertHistory();
+                copyTextToClipboard(shortLink, '短網址生成成功並已自動複製！');
             } catch (err) {
-                showToast(`轉換失敗：${err.message}`, 'error');
+                showToast(err.message, 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = originalHtml;
+                btn.innerText = originalText;
             }
         }
 
-        function prependConvertedResult(originUrl, shortLink, tags) {
-            const list = document.getElementById('convertedHistoryList');
-            if (list.querySelector('.italic')) {
-                list.innerHTML = '';
+        function renderConvertHistory() {
+            const container = document.getElementById('convertedHistoryList');
+            if (!container) return;
+
+            if (!convertHistory || convertHistory.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-slate-500 text-xs italic">請在左側輸入網址並點擊生成...</div>`;
+                return;
             }
 
-            const tagsHtml = tags.length > 0
-                ? tags.map(t => `<span class="px-2 py-0.5 bg-cyan-950 text-cyan-300 border border-cyan-700/60 rounded text-[10px] font-mono">${t}</span>`).join(' ')
-                : `<span class="text-[10px] text-slate-500">無 SubID 標籤</span>`;
-
-            const card = document.createElement('div');
-            card.className = 'p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2';
-            card.innerHTML = `
-                <div class="flex flex-wrap items-center gap-1.5">${tagsHtml}</div>
-                <div class="text-[11px] text-slate-500 truncate" title="${originUrl}">原網址：${originUrl}</div>
-                <div class="flex items-center justify-between gap-2 pt-1">
-                    <span class="text-xs font-mono font-bold text-cyan-300 truncate">${shortLink}</span>
-                    <button onclick="copyStringToClipboard('${shortLink}', '短網址已複製！')" class="px-3 py-1.5 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 rounded-lg text-xs font-bold shrink-0 transition-colors">
-                        <i class="fa-regular fa-copy mr-1"></i>複製
-                    </button>
+            container.innerHTML = convertHistory.map(item => `
+                <div class="p-3.5 bg-slate-900/90 border border-slate-800 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="px-2 py-0.5 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 rounded text-[10px] font-mono truncate max-w-[220px]">
+                            ${escapeHtml(item.subIds)}
+                        </span>
+                        <span class="text-[10px] text-slate-500">${escapeHtml(item.time)}</span>
+                    </div>
+                    <div class="flex items-center justify-between gap-2 bg-slate-950/80 px-3 py-2 rounded-lg border border-slate-800/80">
+                        <a href="${escapeHtml(item.shortLink)}" target="_blank" rel="noopener noreferrer" class="text-xs font-mono font-bold text-cyan-400 hover:underline truncate">
+                            ${escapeHtml(item.shortLink)}
+                        </a>
+                        <button onclick="copyTextToClipboard('${escapeHtml(item.shortLink)}', '已複製短網址')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold shrink-0 transition-colors">
+                            <i class="fa-solid fa-copy mr-1"></i>複製
+                        </button>
+                    </div>
+                    <div class="text-[10px] text-slate-500 truncate" title="${escapeHtml(item.originUrl)}">
+                        原始網址：${escapeHtml(item.originUrl)}
+                    </div>
                 </div>
-            `;
-            list.prepend(card);
+            `).join('');
         }
 
-        // ==========================================
-        // 相容 iFrame 的剪貼簿複製工具
-        // ==========================================
-        function copyStringToClipboard(text, successMsg = '已複製到剪貼簿') {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-9999px';
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                showToast(successMsg, 'success');
-            } catch (err) {
-                showToast('複製失敗，請手動選取複製', 'error');
-            }
-            document.body.removeChild(textArea);
+        function clearConvertHistory() {
+            convertHistory = [];
+            localStorage.removeItem('SHOPEE_CONVERT_HISTORY');
+            renderConvertHistory();
+            showToast('已清除轉碼歷史紀錄', 'info');
         }
     </script>
 </body>
