@@ -419,11 +419,11 @@
                 toast.classList.remove('translate-y-2', 'opacity-0');
             });
 
-            // 顯示 3.5 秒後淡出移除
+            // 顯示 5 秒後淡出移除
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+                setTimeout(() => toast.remove(), 500);
+            }, 5000);
         }
 
         function copyTextToClipboard(text, successMsg = '已複製到剪貼簿') {
