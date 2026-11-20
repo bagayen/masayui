@@ -65,10 +65,10 @@
                     <span class="lg:hidden">業績訂單</span>
                     <span class="sidebar-text hidden lg:inline">業績與訂單回報</span>
                 </button>
-                <button onclick="switchTab('highCommission')" id="nav-highCommission" title="高佣金爆款選品" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
+                <button onclick="switchTab('highCommission')" id="nav-highCommission" title="高分潤爆款選品" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
                     <i class="fa-solid fa-fire text-sm lg:text-base text-amber-500 shrink-0"></i>
-                    <span class="lg:hidden">高佣選品</span>
-                    <span class="sidebar-text hidden lg:inline">高佣金爆款選品</span>
+                    <span class="lg:hidden">高潤選品</span>
+                    <span class="sidebar-text hidden lg:inline">高分潤爆款選品</span>
                 </button>
                 <button onclick="switchTab('converter')" id="nav-converter" title="SubID 渠道轉換器" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
                     <i class="fa-solid fa-link text-sm lg:text-base text-cyan-400 shrink-0"></i>
@@ -199,7 +199,7 @@
                                 <th class="p-3 cursor-pointer hover:text-purple-300 transition-colors group" onclick="sortOrders('time')">訂單編號 / 時間 <i id="sort-time" class="fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1"></i></th>
                                 <th class="p-3 cursor-pointer hover:text-purple-300 transition-colors group" onclick="sortOrders('name')">購買商品 <i id="sort-name" class="fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1"></i></th>
                                 <th class="p-3">數量 / 單價</th>
-                                <th class="p-3 cursor-pointer hover:text-purple-300 transition-colors group" onclick="sortOrders('commission')">預估佣金 <i id="sort-commission" class="fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1"></i></th>
+                                <th class="p-3 cursor-pointer hover:text-purple-300 transition-colors group" onclick="sortOrders('commission')">預估分潤 <i id="sort-commission" class="fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1"></i></th>
                                 <th class="p-3 cursor-pointer hover:text-purple-300 transition-colors group" onclick="sortOrders('status')">訂單狀態 <i id="sort-status" class="fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1"></i></th>
                                 <th class="p-3 cursor-pointer hover:text-purple-300 transition-colors group" onclick="sortOrders('subid')">渠道標籤 (SubID) <i id="sort-subid" class="fa-solid fa-sort text-[10px] text-slate-600 group-hover:text-purple-400 ml-1"></i></th>
                             </tr>
@@ -212,11 +212,11 @@
             </div>
         </section>
 
-        <!-- ================= TAB 2: 高佣金爆款選品 ================= -->
+        <!-- ================= TAB 2: 高分潤爆款選品 ================= -->
         <section id="tab-highCommission" class="tab-content space-y-6 hidden">
             <div>
                 <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-                    <i class="fa-solid fa-fire text-amber-500"></i> 高佣金爆款推薦
+                    <i class="fa-solid fa-fire text-amber-500"></i> 高分潤爆款推薦
                 </h2>
                 <p class="text-xs text-slate-400 mt-1">搜尋蝦皮官方加碼高分潤商品 (每次載入 50 筆)</p>
             </div>
@@ -224,10 +224,10 @@
             <div class="glass-card p-4 rounded-2xl flex flex-col sm:flex-row gap-3">
                 <div class="relative flex-1">
                     <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-sm"></i>
-                    <input type="text" id="productSearchKey" onkeyup="if(event.key==='Enter') fetchHighCommissionProducts()" placeholder="搜尋高佣金商品（如：保濕精華）" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+                    <input type="text" id="productSearchKey" onkeyup="if(event.key==='Enter') fetchHighCommissionProducts()" placeholder="搜尋高分潤商品（如：保濕精華）" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
                 </div>
                 <select id="sortCommissionSelect" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500">
-                    <option value="5">佣金比例高至低</option>
+                    <option value="5">分潤比例高至低</option>
                     <option value="2">銷量熱門優先</option>
                     <option value="3">價格由低至高</option>
                 </select>
@@ -936,7 +936,7 @@
                     </div>
                 `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400">訂單合計</div>` : '');
 
-                // 預估佣金多行堆疊 + 多商品時底部顯示總佣金
+                // 預估分潤多行堆疊 + 多商品時底部顯示總分潤
                 const commHtml = items.map((it, idx) => {
                     const c = parseFloat(it.estimatedCommission || 0).toFixed(2);
                     return `
@@ -976,7 +976,7 @@
                 return;
             }
 
-            const headers = ['訂單編號', '訂單時間', '購買商品', '數量', '單價', '預估佣金', '訂單狀態', 'SubID'];
+            const headers = ['訂單編號', '訂單時間', '購買商品', '數量', '單價', '預估分潤', '訂單狀態', 'SubID'];
             const rows = currentOrdersData.map(order => {
                 const dateStr = new Date((order.purchaseTime || 0) * 1000).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei', hour12: false });
                 const items = (order.items && order.items.length > 0) ? order.items : [{}];
@@ -1050,7 +1050,7 @@
         }
 
         // ==========================================
-        // TAB 2: 高佣金爆款選品
+        // TAB 2: 高分潤爆款選品
         // ==========================================
         function getMockHighCommissionProducts() {
             return [
@@ -1102,7 +1102,7 @@
             const keyword = (document.getElementById('productSearchKey').value || '').trim();
             const sortType = document.getElementById('sortCommissionSelect').value;
 
-            grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-300 glass-card rounded-2xl"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在搜尋高佣金商品...</div>`;
+            grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-300 glass-card rounded-2xl"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在搜尋高分潤商品...</div>`;
 
             try {
                 let products = [];
@@ -1138,7 +1138,7 @@
                 }
 
                 if (products.length === 0) {
-                    grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">找不到符合條件的高佣金商品</div>`;
+                    grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">找不到符合條件的高分潤商品</div>`;
                     return;
                 }
 
@@ -1147,7 +1147,7 @@
                         <div class="space-y-2.5">
                             <div class="flex items-center justify-between gap-2">
                                 <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-extrabold">
-                                    佣金 ${escapeHtml(p.commissionRate)}%
+                                    分潤 ${escapeHtml(p.commissionRate)}%
                                 </span>
                                 <span class="text-[11px] text-slate-400 truncate max-w-[140px]">${escapeHtml(p.shopName)}</span>
                             </div>
