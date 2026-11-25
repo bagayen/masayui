@@ -39,7 +39,7 @@
                             <h1 class="font-bold text-sm lg:text-base leading-tight tracking-wide text-white">Shopee Power</h1>
                             <span id="collapsedTabBadge" class="hidden lg:hidden px-1.5 py-0.5 bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded text-[10px] font-bold">業績訂單</span>
                         </div>
-                        <p class="text-[10px] lg:text-[11px] text-purple-400 font-medium">Affiliate Center v2.2</p>
+                        <p class="text-[10px] lg:text-[11px] text-purple-400 font-medium">Affiliate Center v2.3</p>
                     </div>
                 </div>
 
@@ -65,10 +65,10 @@
                     <span class="lg:hidden">業績訂單</span>
                     <span class="sidebar-text hidden lg:inline">業績與訂單回報</span>
                 </button>
-                <button onclick="switchTab('highCommission')" id="nav-highCommission" title="高分潤爆款選品" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
+                <button onclick="switchTab('highCommission')" id="nav-highCommission" title="優惠商品搜尋器" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
                     <i class="fa-solid fa-fire text-sm lg:text-base text-amber-500 shrink-0"></i>
-                    <span class="lg:hidden">高潤選品</span>
-                    <span class="sidebar-text hidden lg:inline">高分潤爆款選品</span>
+                    <span class="lg:hidden">商品搜尋</span>
+                    <span class="sidebar-text hidden lg:inline">優惠商品搜尋器</span>
                 </button>
                 <button onclick="switchTab('converter')" id="nav-converter" title="SubID 渠道轉換器" class="tab-btn flex-1 md:flex-none lg:w-full flex items-center justify-center lg:justify-start gap-1.5 lg:gap-3 px-2.5 py-2 md:px-3.5 lg:px-4 lg:py-3 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/60 border border-transparent transition-all whitespace-nowrap">
                     <i class="fa-solid fa-link text-sm lg:text-base text-cyan-400 shrink-0"></i>
@@ -212,33 +212,93 @@
             </div>
         </section>
 
-        <!-- ================= TAB 2: 高分潤爆款選品 ================= -->
-        <section id="tab-highCommission" class="tab-content space-y-6 hidden">
-            <div>
-                <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
-                    <i class="fa-solid fa-fire text-amber-500"></i> 高分潤爆款推薦
-                </h2>
-                <p class="text-xs text-slate-400 mt-1">搜尋蝦皮官方加碼高分潤商品 (每次載入 50 筆)</p>
-            </div>
-
-            <div class="glass-card p-4 rounded-2xl flex flex-col sm:flex-row gap-3">
-                <div class="relative flex-1">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-sm"></i>
-                    <input type="text" id="productSearchKey" onkeyup="if(event.key==='Enter') fetchHighCommissionProducts()" placeholder="搜尋高分潤商品（如：保濕精華）" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-purple-500">
+        <!-- ================= TAB 2: 蝦皮優惠商品搜尋器 ================= -->
+        <section id="tab-highCommission" class="tab-content space-y-5 hidden">
+            <!-- 標題區 -->
+            <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+                <div>
+                    <span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-widest uppercase text-amber-400 mb-1">
+                        <i class="fa-solid fa-bolt"></i> SHOPEE PRODUCT OFFER FINDER
+                    </span>
+                    <h2 class="text-xl md:text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+                        蝦皮優惠商品搜尋器
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">輕鬆搜尋好康與高分潤商品，支援賣場權重排序、折扣篩選與一鍵分享分潤連結</p>
                 </div>
-                <select id="sortCommissionSelect" class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-2.5 text-xs text-slate-300 focus:outline-none focus:border-purple-500">
-                    <option value="5">分潤比例高至低</option>
-                    <option value="2">銷量熱門優先</option>
-                    <option value="3">價格由低至高</option>
-                </select>
-                <button onclick="fetchHighCommissionProducts()" class="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap">
-                    搜尋高佣商品
-                </button>
             </div>
 
-            <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">請輸入關鍵字，並點擊「搜尋高佣商品」</div>
+            <!-- 搜尋表單與本地篩選排序列 -->
+            <div class="glass-card p-4 sm:p-5 rounded-2xl space-y-4">
+                <form onsubmit="event.preventDefault(); fetchHighCommissionProducts();" class="flex flex-col sm:flex-row gap-3">
+                    <div class="relative flex-1">
+                        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-sm"></i>
+                        <input
+                            type="text"
+                            id="productSearchKey"
+                            aria-label="商品搜尋關鍵字"
+                            maxlength="100"
+                            required
+                            placeholder="輸入商品名稱，例如：舒潔抽取式衛生紙"
+                            class="w-full bg-slate-900 border border-slate-700/80 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                        >
+                    </div>
+                    <button
+                        type="submit"
+                        id="btnSearchProducts"
+                        class="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-bold rounded-xl text-xs transition-all shadow-lg shadow-amber-500/20 whitespace-nowrap flex items-center justify-center gap-1.5"
+                    >
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>搜尋商品</span>
+                    </button>
+                </form>
+
+                <!-- 本地端即時篩選與排序列 -->
+                <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/80 text-xs">
+                    <div class="flex flex-wrap items-center gap-4">
+                        <label class="flex items-center gap-2 text-slate-300 font-medium">
+                            <span class="text-slate-400">商品排序：</span>
+                            <select
+                                id="sortCommissionSelect"
+                                onchange="applyProductFilterAndSort()"
+                                class="bg-slate-900 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500"
+                            >
+                                <option value="default" selected>預設排序（直營/商城優先）</option>
+                                <option value="price">價格最低</option>
+                                <option value="discount">折扣最高</option>
+                                <option value="sales">銷量最高</option>
+                                <option value="commission">分潤率最高</option>
+                            </select>
+                        </label>
+
+                        <label class="inline-flex items-center gap-2 cursor-pointer text-slate-300 select-none hover:text-white transition-colors">
+                            <input
+                                type="checkbox"
+                                id="onlyDiscountCheckbox"
+                                onchange="applyProductFilterAndSort()"
+                                class="w-4 h-4 rounded border-slate-700 bg-slate-900 text-amber-500 focus:ring-amber-500/40 focus:ring-offset-0 cursor-pointer"
+                            >
+                            <span>只顯示有折扣商品</span>
+                        </label>
+                    </div>
+
+                    <!-- 筆數統計顯示 -->
+                    <div id="productCountStatus" class="hidden text-[11px] text-slate-400 font-medium bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                        共取得 <span id="totalFetchedCount" class="text-white font-bold">0</span> 筆商品，目前顯示 <span id="filteredDisplayCount" class="text-amber-400 font-bold">0</span> 筆
+                    </div>
+                </div>
             </div>
+
+            <!-- 商品卡片網格 -->
+            <div id="productGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3">
+                <div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl space-y-2">
+                    <i class="fa-solid fa-bag-shopping text-2xl text-slate-600 block"></i>
+                    <p class="text-xs">請輸入商品關鍵字，並點擊「搜尋商品」開始選品</p>
+                </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 text-center pt-1">
+                商品價格及優惠以蝦皮實際結帳頁面為準。透過聯盟推廣連結購買可能產生分潤。
+            </p>
         </section>
 
         <!-- ================= TAB 3: SubID 渠道轉換器 ================= -->
@@ -318,6 +378,8 @@
         let isDemoMode = !gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址";
 
         let currentOrdersData = [];
+        let currentProductsData = [];
+        let isSearchingProducts = false;
         let sortState = { column: 'time', asc: false };
         let isSidebarCollapsed = localStorage.getItem('SHOPEE_NAV_COLLAPSED') === 'true';
 
@@ -354,6 +416,16 @@
                 pulse: false
             }
         };
+
+        // 預設商品佔位圖 SVG (破圖或無圖片時使用)
+        const FALLBACK_PRODUCT_SVG = "data:image/svg+xml;utf8," + encodeURIComponent(
+            `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+                <rect width="400" height="400" fill="#0f172a"/>
+                <circle cx="200" cy="175" r="46" fill="#1e293b"/>
+                <path d="M180 175h40M200 155v40" stroke="#64748b" stroke-width="5" stroke-linecap="round"/>
+                <text x="200" y="255" font-family="sans-serif" font-size="16" fill="#64748b" text-anchor="middle">SHOPEE OFFER</text>
+            </svg>`
+        );
 
         // ==========================================
         // 初始化設定
@@ -419,7 +491,6 @@
                 toast.classList.remove('translate-y-2', 'opacity-0');
             });
 
-            // 顯示 5 秒後淡出移除
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-y-2');
                 setTimeout(() => toast.remove(), 500);
@@ -539,7 +610,7 @@
 
             const tabNames = {
                 analytics: '業績訂單',
-                highCommission: '高佣選品',
+                highCommission: '商品搜尋',
                 converter: '渠道轉換'
             };
             const badge = document.getElementById('collapsedTabBadge');
@@ -604,7 +675,6 @@
         const TW_OFFSET_MS = 8 * 60 * 60 * 1000;
         const TW_OFFSET_SEC = 8 * 60 * 60;
 
-        // 取得目前台灣時間的年、月(0~11)、日、星期(0~6)
         function getTaiwanNowParts() {
             const twShifted = new Date(Date.now() + TW_OFFSET_MS);
             return {
@@ -615,7 +685,6 @@
             };
         }
 
-        // 取得台灣時間的 YYYY-MM-DD 字串
         function getTaiwanDateString(offsetDays = 0) {
             const { year, month, day } = getTaiwanNowParts();
             const d = new Date(Date.UTC(year, month, day + offsetDays));
@@ -625,7 +694,6 @@
             return `${yyyy}-${mm}-${dd}`;
         }
 
-        // 將指定的台灣時間 (年, 月0~11, 日, 時, 分, 秒) 轉換為標準 Unix 時間戳 (秒)
         function twDateToUnixSec(year, month, day, hour = 0, minute = 0, second = 0) {
             return Math.floor(Date.UTC(year, month, day, hour, minute, second) / 1000) - TW_OFFSET_SEC;
         }
@@ -868,9 +936,6 @@
             renderOrdersTable(sorted);
         }
 
-        // ==========================================
-        // SubID 標籤徽章渲染 (寬鬆認定渠道與 AP 標籤)
-        // ==========================================
         function getSubIdBadge(subId) {
             if (!subId || subId.toString().trim() === '無' || subId.toString().trim() === 'null' || subId.toString().trim() === '') {
                 return `<span class="px-2 py-0.5 bg-slate-800 text-slate-400 rounded-lg text-[10px] font-mono border border-slate-700">無標籤</span>`;
@@ -879,23 +944,18 @@
             const lowerSubId = cleanSubId.toLowerCase();
             const safeSubId = escapeHtml(cleanSubId);
             
-            // IG (粉紫色)
             if (lowerSubId.includes('ig') || lowerSubId.includes('instagram')) {
                 return `<span class="px-2.5 py-1 bg-fuchsia-500/25 text-fuchsia-300 border border-fuchsia-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-instagram"></i>${safeSubId}</span>`;
             }
-            // FB (藍色)
             if (lowerSubId.includes('fb') || lowerSubId.includes('facebook')) {
                 return `<span class="px-2.5 py-1 bg-blue-500/25 text-blue-300 border border-blue-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-facebook"></i>${safeSubId}</span>`;
             }
-            // LINE (綠色)
             if (lowerSubId.includes('line')) {
                 return `<span class="px-2.5 py-1 bg-emerald-500/25 text-emerald-300 border border-emerald-400/50 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm"><i class="fa-brands fa-line"></i>${safeSubId}</span>`;
             }
-            // AP 轉換器 (高亮紫色 + 機器人圖示)
             if (lowerSubId.includes('ap')) {
                 return `<span class="px-2.5 py-1 bg-purple-600/30 text-purple-200 border border-purple-400/60 rounded-lg text-[11px] font-mono font-bold inline-flex items-center gap-1 shadow-sm shadow-purple-900/50"><i class="fa-solid fa-robot text-purple-300"></i>${safeSubId}</span>`;
             }
-            // 預設樣式 (深青色)
             return `<span class="px-2.5 py-1 bg-cyan-950/80 text-cyan-300 border border-cyan-700/60 rounded-lg text-[11px] font-mono inline-flex items-center gap-1"><i class="fa-solid fa-tag text-cyan-400"></i>${safeSubId}</span>`;
         }
 
@@ -906,7 +966,6 @@
                 return;
             }
 
-            // 產生序號 (No.)，並支援同一筆訂單多商品垂直堆疊顯示
             tbody.innerHTML = orders.map((order, index) => {
                 const items = (order.items && order.items.length > 0)
                     ? order.items
@@ -922,21 +981,18 @@
                     pulse: false
                 };
 
-                // 商品名稱多行堆疊
                 const namesHtml = items.map((it, idx) => `
                     <div class="truncate max-w-xs sm:max-w-sm ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}" title="${escapeHtml(it.itemName)}">
                         ${isMulti ? `<span class="text-[10px] text-purple-400 font-mono mr-1">${idx + 1}.</span>` : ''}${escapeHtml(it.itemName)}
                     </div>
                 `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400 font-semibold">共 ${items.length} 項商品</div>` : '');
 
-                // 數量與單價多行堆疊 (與左側商品行高對齊)
                 const qtyPriceHtml = items.map((it, idx) => `
                     <div class="whitespace-nowrap ${isMulti && idx > 0 ? 'pt-1.5 border-t border-slate-800/80' : ''}">
                         ${it.qty || 1} x $${parseFloat(it.itemPrice || 0).toLocaleString()}
                     </div>
                 `).join('') + (isMulti ? `<div class="pt-1 text-[10px] text-slate-400">訂單合計</div>` : '');
 
-                // 預估分潤多行堆疊 + 多商品時底部顯示總分潤
                 const commHtml = items.map((it, idx) => {
                     const c = parseFloat(it.estimatedCommission || 0).toFixed(2);
                     return `
@@ -1050,76 +1106,149 @@
         }
 
         // ==========================================
-        // TAB 2: 高分潤爆款選品
+        // TAB 2: 蝦皮優惠商品搜尋器 (含本地篩選與賣場權重排序)
         // ==========================================
+        function makeDemoSvg(bgHex, titleText, subText) {
+            return "data:image/svg+xml;utf8," + encodeURIComponent(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+                    <defs>
+                        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                            <stop offset="0%" stop-color="${bgHex}"/>
+                            <stop offset="100%" stop-color="#0f172a"/>
+                        </linearGradient>
+                    </defs>
+                    <rect width="400" height="400" fill="url(#g)"/>
+                    <text x="200" y="190" font-family="sans-serif" font-weight="bold" font-size="24" fill="#ffffff" text-anchor="middle">${titleText}</text>
+                    <text x="200" y="226" font-family="sans-serif" font-size="14" fill="#cbd5e1" text-anchor="middle">${subText}</text>
+                </svg>`
+            );
+        }
+
         function getMockHighCommissionProducts() {
             return [
                 {
                     itemId: '19968292831',
-                    productName: '【官方直營】極潤玻尿酸保濕精華液 50ml 買一送一超值組',
-                    price: 990,
+                    productName: '舒潔 棉柔舒適抽取衛生紙 100抽x64包/箱 蝦皮直營',
+                    imageUrl: makeDemoSvg('#581c87', '舒潔抽取衛生紙', '100抽 x 64包 箱購組'),
+                    priceMin: 749,
+                    priceMax: 899,
+                    priceDiscountRate: 28,
+                    commissionRate: '8.5',
+                    commission: 63.67,
+                    sales: 18420,
+                    shopName: '蝦皮直營生活超市',
+                    shopType: [1],
+                    productLink: 'https://shopee.tw/product/261740164/19968292831',
+                    offerLink: 'https://s.shopee.tw/demo_kleenex'
+                },
+                {
+                    itemId: '24819204112',
+                    productName: '【官方商城】極潤玻尿酸保濕精華液 50ml 買一送一超值組',
+                    imageUrl: makeDemoSvg('#1e3a8a', '極潤保濕精華液', '買一送一官方限定'),
+                    priceMin: 990,
+                    priceMax: 1280,
+                    priceDiscountRate: 35,
                     commissionRate: '18.5',
                     commission: 183.15,
                     sales: 3420,
                     shopName: '官方美妝旗艦店',
-                    productLink: 'https://shopee.tw/product/261740164/19968292831'
-                },
-                {
-                    itemId: '24819204112',
-                    productName: '多功能無線磁吸快充行動電源 10000mAh 台灣認證',
-                    price: 680,
-                    commissionRate: '15.0',
-                    commission: 102.00,
-                    sales: 5180,
-                    shopName: '3C 數位生活館',
-                    productLink: 'https://shopee.tw/product/131441298/24819204112'
+                    shopType: [1],
+                    productLink: 'https://shopee.tw/product/131441298/24819204112',
+                    offerLink: 'https://s.shopee.tw/demo_serum'
                 },
                 {
                     itemId: '38192019283',
                     productName: '日本專利膠原蛋白胜肽粉 30日份 莓果風味',
-                    price: 1280,
+                    imageUrl: makeDemoSvg('#831843', '膠原蛋白胜肽粉', '30日份 莓果風味'),
+                    priceMin: 1280,
+                    priceMax: 1280,
+                    priceDiscountRate: 15,
                     commissionRate: '22.0',
                     commission: 281.60,
                     sales: 1920,
                     shopName: '日系保健嚴選館',
-                    productLink: 'https://shopee.tw/product/88271625/38192019283'
+                    shopType: [],
+                    productLink: 'https://shopee.tw/product/88271625/38192019283',
+                    offerLink: 'https://s.shopee.tw/demo_collagen'
                 },
                 {
                     itemId: '49281726354',
                     productName: '304不鏽鋼雙層真空保溫隨行杯 750ml 附吸管',
-                    price: 349,
+                    imageUrl: makeDemoSvg('#065f46', '304不鏽鋼保溫杯', '750ml 大容量附吸管'),
+                    priceMin: 349,
+                    priceMax: 399,
+                    priceDiscountRate: 0,
                     commissionRate: '14.0',
                     commission: 48.86,
                     sales: 8420,
                     shopName: '質感居家選物',
-                    productLink: 'https://shopee.tw/product/55192837/49281726354'
+                    shopType: [],
+                    productLink: 'https://shopee.tw/product/55192837/49281726354',
+                    offerLink: 'https://s.shopee.tw/demo_tumbler'
                 }
             ];
         }
 
-        async function fetchHighCommissionProducts() {
-            const grid = document.getElementById('productGrid');
-            const keyword = (document.getElementById('productSearchKey').value || '').trim();
-            const sortType = document.getElementById('sortCommissionSelect').value;
+        // 將後端回傳商品欄位統一正規化，兼顧舊版 price 與新版 productOfferV2 欄位
+        function normalizeProduct(p) {
+            const priceMin = Number(p.priceMin ?? p.price ?? 0);
+            const priceMax = Number(p.priceMax ?? p.price ?? priceMin);
+            const rate = parseFloat(p.commissionRate || 0);
+            const estComm = p.commission !== undefined
+                ? Number(p.commission)
+                : Number(((priceMin * rate) / 100).toFixed(1));
 
-            grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-300 glass-card rounded-2xl"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在搜尋高分潤商品...</div>`;
+            return {
+                itemId: p.itemId || '',
+                productName: p.productName || '未命名商品',
+                imageUrl: p.imageUrl || FALLBACK_PRODUCT_SVG,
+                productLink: p.productLink || p.offerLink || '',
+                offerLink: p.offerLink || p.productLink || '',
+                priceMin,
+                priceMax,
+                priceDiscountRate: Number(p.priceDiscountRate || 0),
+                sales: Number(p.sales || 0),
+                commissionRate: rate,
+                commission: estComm,
+                shopName: p.shopName || '蝦皮賣家',
+                shopType: Array.isArray(p.shopType) ? p.shopType : []
+            };
+        }
+
+        // 預設排序賣場權重：蝦皮直營(2) > 蝦皮商城 shopType含1(1) > 一般賣場(0)
+        function getShopPriorityWeight(product) {
+            const shopName = (product.shopName || '').trim();
+            if (shopName.startsWith('蝦皮直營')) return 2;
+            if (Array.isArray(product.shopType) && product.shopType.includes(1)) return 1;
+            return 0;
+        }
+
+        async function fetchHighCommissionProducts() {
+            const keyword = (document.getElementById('productSearchKey').value || '').trim();
+            if (!keyword || isSearchingProducts) return;
+
+            const grid = document.getElementById('productGrid');
+            const btn = document.getElementById('btnSearchProducts');
+            const countStatus = document.getElementById('productCountStatus');
+
+            isSearchingProducts = true;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i><span>搜尋中...</span>`;
+            countStatus.classList.add('hidden');
+            grid.innerHTML = `<div class="col-span-full p-12 text-center text-amber-300 glass-card rounded-2xl text-xs"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i>正在向蝦皮取得商品資料，請稍候...</div>`;
 
             try {
-                let products = [];
+                let rawProducts = [];
                 if (isDemoMode) {
-                    await new Promise(r => setTimeout(r, 250));
-                    products = getMockHighCommissionProducts();
-                    if (keyword) {
-                        const kw = keyword.toLowerCase();
-                        products = products.filter(p => p.productName.toLowerCase().includes(kw) || p.shopName.toLowerCase().includes(kw));
-                    }
-                    if (sortType === '5') {
-                        products.sort((a, b) => parseFloat(b.commissionRate) - parseFloat(a.commissionRate));
-                    } else if (sortType === '2') {
-                        products.sort((a, b) => (b.sales || 0) - (a.sales || 0));
-                    } else if (sortType === '3') {
-                        products.sort((a, b) => (a.price || 0) - (b.price || 0));
-                    }
+                    await new Promise(r => setTimeout(r, 300));
+                    const kw = keyword.toLowerCase();
+                    const allMock = getMockHighCommissionProducts();
+                    const matched = allMock.filter(p =>
+                        p.productName.toLowerCase().includes(kw) ||
+                        p.shopName.toLowerCase().includes(kw)
+                    );
+                    // 測試模式下若關鍵字未命中範例名稱，仍回傳完整範例方便體驗篩選與排序
+                    rawProducts = matched.length > 0 ? matched : allMock;
                 } else {
                     if (!gasApiUrl || gasApiUrl === "請在此填寫你的_GAS_網址") {
                         openSettingsModal();
@@ -1128,59 +1257,162 @@
                     const url = new URL(gasApiUrl);
                     url.searchParams.set('action', 'getHighCommissionProducts');
                     url.searchParams.set('keyword', keyword);
-                    url.searchParams.set('sortType', sortType);
+                    url.searchParams.set('sortType', '5');
                     url.searchParams.set('limit', '50');
 
                     const res = await fetch(url.toString());
                     const data = await res.json();
-                    if (!data.success) throw new Error(data.error || '搜尋商品失敗');
-                    products = (data.products && data.products.nodes) ? data.products.nodes : [];
+                    if (!data.success) throw new Error(data.error || '商品搜尋失敗');
+                    rawProducts = Array.isArray(data.products)
+                        ? data.products
+                        : (data.products && Array.isArray(data.products.nodes) ? data.products.nodes : []);
                 }
 
-                if (products.length === 0) {
-                    grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl">找不到符合條件的高分潤商品</div>`;
-                    return;
-                }
-
-                grid.innerHTML = products.map(p => `
-                    <div class="glass-card rounded-2xl p-4 flex flex-col justify-between gap-4 hover:border-amber-500/40 transition-all">
-                        <div class="space-y-2.5">
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/40 text-amber-300 text-xs font-extrabold">
-                                    分潤 ${escapeHtml(p.commissionRate)}%
-                                </span>
-                                <span class="text-[11px] text-slate-400 truncate max-w-[140px]">${escapeHtml(p.shopName)}</span>
-                            </div>
-                            <h4 class="text-xs font-bold text-slate-100 line-clamp-2 leading-relaxed" title="${escapeHtml(p.productName)}">
-                                ${escapeHtml(p.productName)}
-                            </h4>
-                        </div>
-                        <div class="space-y-3 pt-2 border-t border-slate-800/80">
-                            <div class="flex items-end justify-between">
-                                <div>
-                                    <div class="text-[10px] text-slate-400">商品售價</div>
-                                    <div class="text-sm font-bold text-white">$${Number(p.price || 0).toLocaleString()}</div>
-                                </div>
-                                <div class="text-right">
-                                    <div class="text-[10px] text-slate-400">預估單件分潤</div>
-                                    <div class="text-base font-extrabold text-emerald-400">$${Number(p.commission || 0).toFixed(1)}</div>
-                                </div>
-                            </div>
-                            <div class="flex gap-2">
-                                <button onclick="copyTextToClipboard('${escapeHtml(p.productLink)}', '已複製推廣連結')" class="flex-1 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-[11px] font-bold transition-colors">
-                                    <i class="fa-solid fa-copy mr-1"></i>複製連結
-                                </button>
-                                <button onclick="useProductInConverter('${escapeHtml(p.productLink)}')" class="flex-1 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 rounded-xl text-[11px] font-bold transition-colors">
-                                    <i class="fa-solid fa-tags mr-1"></i>自訂SubID
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
+                currentProductsData = rawProducts.map(normalizeProduct);
+                applyProductFilterAndSort();
+                showToast(`已取得 ${currentProductsData.length} 筆商品資料`, 'success');
             } catch (err) {
-                grid.innerHTML = `<div class="col-span-full p-12 text-center text-rose-400 glass-card rounded-2xl">${escapeHtml(err.message)}</div>`;
+                currentProductsData = [];
+                grid.innerHTML = `<div role="alert" class="col-span-full p-12 text-center text-rose-400 glass-card rounded-2xl text-xs"><i class="fa-solid fa-triangle-exclamation mr-2"></i>${escapeHtml(err.message)}</div>`;
                 showToast(err.message, 'error');
+            } finally {
+                isSearchingProducts = false;
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-magnifying-glass"></i><span>搜尋商品</span>`;
             }
+        }
+
+        function applyProductFilterAndSort() {
+            const grid = document.getElementById('productGrid');
+            const countStatus = document.getElementById('productCountStatus');
+            const sortBy = document.getElementById('sortCommissionSelect').value;
+            const onlyDiscount = document.getElementById('onlyDiscountCheckbox').checked;
+
+            if (!currentProductsData || currentProductsData.length === 0) {
+                countStatus.classList.add('hidden');
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl text-xs">找不到符合條件的商品，請調整搜尋關鍵字。</div>`;
+                return;
+            }
+
+            const filteredAndSorted = currentProductsData
+                .filter(p => !onlyDiscount || p.priceDiscountRate > 0)
+                .sort((a, b) => {
+                    if (sortBy === 'price') return a.priceMin - b.priceMin;
+                    if (sortBy === 'discount') return b.priceDiscountRate - a.priceDiscountRate;
+                    if (sortBy === 'sales') return b.sales - a.sales;
+                    if (sortBy === 'commission') return b.commissionRate - a.commissionRate;
+                    return getShopPriorityWeight(b) - getShopPriorityWeight(a);
+                });
+
+            document.getElementById('totalFetchedCount').innerText = currentProductsData.length;
+            document.getElementById('filteredDisplayCount').innerText = filteredAndSorted.length;
+            countStatus.classList.remove('hidden');
+
+            if (filteredAndSorted.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 glass-card rounded-2xl text-xs">找不到符合條件的商品，請調整篩選條件。</div>`;
+                return;
+            }
+
+            grid.innerHTML = filteredAndSorted.map((p, idx) => {
+                const shopWeight = getShopPriorityWeight(p);
+                const shopBadgeHtml = shopWeight === 2
+                    ? `<span class="px-1.5 py-0.5 rounded bg-purple-600/80 text-white text-[10px] font-bold shrink-0">直營</span>`
+                    : (shopWeight === 1
+                        ? `<span class="px-1.5 py-0.5 rounded bg-rose-600/80 text-white text-[10px] font-bold shrink-0">商城</span>`
+                        : '');
+
+                const priceDisplay = p.priceMax !== p.priceMin
+                    ? `NT$ ${p.priceMin.toLocaleString()} ～ ${p.priceMax.toLocaleString()}`
+                    : `NT$ ${p.priceMin.toLocaleString()}`;
+
+                const shareUrl = p.offerLink || p.productLink;
+                const rawProductUrl = p.productLink || p.offerLink;
+
+                return `
+                    <article class="glass-card rounded-2xl p-3 flex flex-col justify-between group hover:border-amber-500/40 transition-all" data-key="${escapeHtml(rawProductUrl)}-${idx}">
+                        <!-- 上半部：左側小圖 + 右側資訊 -->
+                        <div class="flex gap-3 min-w-0">
+                            <div class="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 rounded-xl bg-slate-900 border border-slate-800/80 overflow-hidden">
+                                <img
+                                    src="${escapeHtml(p.imageUrl)}"
+                                    alt="${escapeHtml(p.productName)}"
+                                    loading="lazy"
+                                    onerror="this.onerror=null;this.src='${FALLBACK_PRODUCT_SVG}';"
+                                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                >
+                                ${p.priceDiscountRate > 0 ? `
+                                    <span class="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-rose-600/95 text-white text-[10px] font-extrabold leading-none shadow">
+                                        -${p.priceDiscountRate}%
+                                    </span>
+                                ` : ''}
+                            </div>
+
+                            <div class="flex-1 min-w-0 flex flex-col justify-between">
+                                <!-- 第一排：賣場等級 + 分潤率 + 預估分潤 -->
+                                <div class="flex items-center justify-between gap-1.5">
+                                    <div class="flex items-center gap-1 min-w-0">
+                                        ${shopBadgeHtml}
+                                        ${p.commissionRate > 0 ? `
+                                            <span class="px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold truncate">
+                                                分潤 ${escapeHtml(p.commissionRate)}%
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                    ${p.commission > 0 ? `
+                                        <span class="text-[11px] font-extrabold text-emerald-400 shrink-0">+$${p.commission.toFixed(1)}</span>
+                                    ` : ''}
+                                </div>
+
+                                <!-- 第二排：商品標題 -->
+                                <h3 class="text-xs font-bold text-slate-100 line-clamp-2 leading-snug my-1" title="${escapeHtml(p.productName)}">
+                                    ${escapeHtml(p.productName)}
+                                </h3>
+
+                                <!-- 第三排：價格與賣場銷量 -->
+                                <div>
+                                    <p class="text-sm font-extrabold text-amber-400 leading-tight truncate">${priceDisplay}</p>
+                                    <div class="flex items-center gap-1.5 text-[10px] text-slate-400 mt-0.5">
+                                        <span class="truncate" title="${escapeHtml(p.shopName)}">${escapeHtml(p.shopName)}</span>
+                                        <span class="shrink-0">·</span>
+                                        <span class="shrink-0">銷量 ${p.sales.toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 底部單列操作按鈕 -->
+                        <div class="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                data-copy-url="${escapeHtml(shareUrl)}"
+                                onclick="copyTextToClipboard(this.dataset.copyUrl, '已複製分潤推廣連結')"
+                                class="flex-1 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap"
+                            >
+                                <i class="fa-solid fa-copy mr-1"></i>複製連結
+                            </button>
+                            <button
+                                type="button"
+                                data-target-url="${escapeHtml(rawProductUrl)}"
+                                onclick="useProductInConverter(this.dataset.targetUrl)"
+                                class="flex-1 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 border border-cyan-500/35 text-cyan-300 rounded-lg text-[11px] font-bold transition-colors whitespace-nowrap"
+                            >
+                                <i class="fa-solid fa-tags mr-1"></i>自訂SubID
+                            </button>
+                            ${shareUrl ? `
+                                <a
+                                    href="${escapeHtml(shareUrl)}"
+                                    target="_blank"
+                                    rel="noopener noreferrer sponsored"
+                                    title="前往蝦皮購買"
+                                    class="px-2.5 py-1.5 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 rounded-lg text-[11px] font-bold transition-colors shrink-0 whitespace-nowrap"
+                                >
+                                    購買 <i class="fa-solid fa-arrow-up-right-from-square text-[9px] ml-0.5"></i>
+                                </a>
+                            ` : ''}
+                        </div>
+                    </article>
+                `;
+            }).join('');
         }
 
         function useProductInConverter(productUrl) {
@@ -1229,7 +1461,7 @@
                     const url = new URL(gasApiUrl);
                     url.searchParams.set('action', 'generateShortLink');
                     url.searchParams.set('url', rawUrl);
-                    ['subId1', 'subId2', 'subId3', 'subId4', 'subId5'].forEach((key, idx) => {
+                    ['subId1', 'subId2', 'subId3', 'subId4', 'subId5'].forEach(key => {
                         const val = document.getElementById(`${key}Input`).value.trim();
                         if (val) url.searchParams.set(key, val);
                     });
@@ -1282,7 +1514,7 @@
                         <a href="${escapeHtml(item.shortLink)}" target="_blank" rel="noopener noreferrer" class="text-xs font-mono font-bold text-cyan-400 hover:underline truncate">
                             ${escapeHtml(item.shortLink)}
                         </a>
-                        <button onclick="copyTextToClipboard('${escapeHtml(item.shortLink)}', '已複製短網址')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold shrink-0 transition-colors">
+                        <button data-copy-url="${escapeHtml(item.shortLink)}" onclick="copyTextToClipboard(this.dataset.copyUrl, '已複製短網址')" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[11px] font-semibold shrink-0 transition-colors">
                             <i class="fa-solid fa-copy mr-1"></i>複製
                         </button>
                     </div>
