@@ -1215,11 +1215,16 @@
             };
         }
 
-        // 預設排序賣場權重：蝦皮直營(2) > 蝦皮商城 shopType含1(1) > 一般賣場(0)
+        // 預設排序賣場權重：蝦皮直營(2) > 蝦皮商城/官方旗艦店(1) > 一般賣場(0)
         function getShopPriorityWeight(product) {
             const shopName = (product.shopName || '').trim();
             if (shopName.startsWith('蝦皮直營')) return 2;
-            if (Array.isArray(product.shopType) && product.shopType.includes(1)) return 1;
+
+            const types = Array.isArray(product.shopType)
+                ? product.shopType.map(String)
+                : (product.shopType !== undefined && product.shopType !== null ? [String(product.shopType)] : []);
+
+            if (types.includes('1') || shopName.includes('官方旗艦店')) return 1;
             return 0;
         }
 
@@ -1257,8 +1262,8 @@
                     const url = new URL(gasApiUrl);
                     url.searchParams.set('action', 'getHighCommissionProducts');
                     url.searchParams.set('keyword', keyword);
-                    url.searchParams.set('sortType', '5');
-                    url.searchParams.set('limit', '50');
+                    url.searchParams.set('sortType', '1');
+                    url.searchParams.set('limit', '250');
 
                     const res = await fetch(url.toString());
                     const data = await res.json();
